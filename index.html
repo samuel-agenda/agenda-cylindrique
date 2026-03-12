@@ -153,6 +153,7 @@
     border-bottom: 0.5px solid var(--border2);
     background: var(--bg);
     flex-shrink: 0;
+    position: relative;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -588,20 +589,19 @@
   }
   .day-header { position: relative; overflow: hidden; }
 
+  .spi-btn.active,.month-btn.active{background:rgba(108,99,255,0.15)!important;border-color:var(--accent)!important;color:var(--accent)!important}
   .month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:16px}
   .month-title{font-size:14px;font-weight:500;color:var(--text);margin:14px 0 6px;font-family:'DM Mono',monospace}
   .month-day-header{font-size:10px;color:var(--text3);text-align:center;padding:3px 0}
-  .month-cell{min-height:44px;border-radius:5px;padding:3px 4px;background:var(--surface);border:0.5px solid var(--border);font-size:11px;cursor:pointer;position:relative;overflow:hidden}
+  .month-cell{min-height:44px;border-radius:5px;padding:3px 4px;background:var(--surface);border:0.5px solid var(--border);cursor:pointer;position:relative;overflow:hidden}
   .month-cell.other-month{opacity:0.3}
   .month-cell.today{border-color:var(--accent);border-width:1.5px}
   .cell-day{font-size:11px;font-weight:500;color:var(--text2)}
-  .cell-spi{font-size:12px;position:absolute;bottom:1px;right:2px}
-  .spi-btn.active{background:rgba(120,60,200,0.15)!important;border-color:#9966dd!important;color:#9966dd!important}
-  .month-btn.active{background:rgba(60,120,200,0.15)!important;border-color:#4488cc!important;color:#4488cc!important}
-  .hour-row.lunch-zone{background:rgba(160,210,255,0.15)!important}
-  .hour-row.lunch-border-top{border-top:2px solid rgba(20,40,80,0.4)!important;position:relative}
+  .cell-spi{position:absolute;bottom:1px;right:1px;line-height:1}
+  .hour-row.lunch-zone{background:rgba(160,210,255,0.13)!important}
+  .hour-row.lunch-border-top{border-top:2px solid rgba(20,40,80,0.35)!important;position:relative}
   .hour-row.lunch-border-top::before{content:'🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷';position:absolute;top:-13px;left:0;right:0;font-size:9px;overflow:hidden;white-space:nowrap;pointer-events:none}
-  .hour-row.lunch-border-bottom{border-bottom:2px solid rgba(20,40,80,0.4)!important;position:relative}
+  .hour-row.lunch-border-bottom{border-bottom:2px solid rgba(20,40,80,0.35)!important;position:relative}
   .hour-row.lunch-border-bottom::after{content:'🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷';position:absolute;bottom:-13px;left:0;right:0;font-size:9px;overflow:hidden;white-space:nowrap;pointer-events:none}
 </style>
 </head>
@@ -615,8 +615,8 @@
     <button class="week-btn" onclick="nextWeek()">→</button>
   </div>
   <div class="topbar-right">
-    <button id="spi-btn" onclick="toggleSpi()" style="padding:4px 9px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;font-family:'DM Mono',monospace;">SPI</button>
-    <button id="month-btn" onclick="toggleMonthView()" style="padding:4px 9px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;">☰</button>
+    <button id="spi-btn" onclick="toggleSpi()" style="padding:4px 9px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;font-family:'DM Mono',monospace;transition:all .15s;">SPI</button>
+    <button id="month-btn" onclick="toggleMonthView()" style="padding:4px 9px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;transition:all .15s;">☰</button>
     <span class="mode-badge" id="mode-badge">face jour</span>
     <button class="flip-btn" id="flip-btn" onclick="flipWeek()">
       <span class="flip-icon">↻</span> retourner
@@ -707,12 +707,12 @@
 const DAY_HOURS  = Array.from({length:17},(_,i)=>i+6);   // 6..22
 const NIGHT_HOURS= [22,23,0,1,2,3,4,5,6];  // 22h→6h
 
-const ALL_WEEKS = [{"label": "5–11 Janvier", "days": ["5 jan", "6 jan", "7 jan", "8 jan", "9 jan", "10 jan", "11 jan"], "dates": ["01-05", "01-06", "01-07", "01-08", "01-09", "01-10", "01-11"]}, {"label": "12–18 Janvier", "days": ["12 jan", "13 jan", "14 jan", "15 jan", "16 jan", "17 jan", "18 jan"], "dates": ["01-12", "01-13", "01-14", "01-15", "01-16", "01-17", "01-18"]}, {"label": "19–25 Janvier", "days": ["19 jan", "20 jan", "21 jan", "22 jan", "23 jan", "24 jan", "25 jan"], "dates": ["01-19", "01-20", "01-21", "01-22", "01-23", "01-24", "01-25"]}, {"label": "26 jan – 1 fév", "days": ["26 jan", "27 jan", "28 jan", "29 jan", "30 jan", "31 jan", "1 fév"], "dates": ["01-26", "01-27", "01-28", "01-29", "01-30", "01-31", "02-01"]}, {"label": "2–8 Février", "days": ["2 fév", "3 fév", "4 fév", "5 fév", "6 fév", "7 fév", "8 fév"], "dates": ["02-02", "02-03", "02-04", "02-05", "02-06", "02-07", "02-08"]}, {"label": "9–15 Février", "days": ["9 fév", "10 fév", "11 fév", "12 fév", "13 fév", "14 fév", "15 fév"], "dates": ["02-09", "02-10", "02-11", "02-12", "02-13", "02-14", "02-15"]}, {"label": "16–22 Février", "days": ["16 fév", "17 fév", "18 fév", "19 fév", "20 fév", "21 fév", "22 fév"], "dates": ["02-16", "02-17", "02-18", "02-19", "02-20", "02-21", "02-22"]}, {"label": "23 fév – 1 mars", "days": ["23 fév", "24 fév", "25 fév", "26 fév", "27 fév", "28 fév", "1 mars"], "dates": ["02-23", "02-24", "02-25", "02-26", "02-27", "02-28", "03-01"]}, {"label": "2–8 Mars", "days": ["2 mars", "3 mars", "4 mars", "5 mars", "6 mars", "7 mars", "8 mars"], "dates": ["03-02", "03-03", "03-04", "03-05", "03-06", "03-07", "03-08"]}, {"label": "9–15 Mars", "days": ["9 mars", "10 mars", "11 mars", "12 mars", "13 mars", "14 mars", "15 mars"], "dates": ["03-09", "03-10", "03-11", "03-12", "03-13", "03-14", "03-15"]}, {"label": "16–22 Mars", "days": ["16 mars", "17 mars", "18 mars", "19 mars", "20 mars", "21 mars", "22 mars"], "dates": ["03-16", "03-17", "03-18", "03-19", "03-20", "03-21", "03-22"]}, {"label": "23–29 Mars", "days": ["23 mars", "24 mars", "25 mars", "26 mars", "27 mars", "28 mars", "29 mars"], "dates": ["03-23", "03-24", "03-25", "03-26", "03-27", "03-28", "03-29"]}, {"label": "30 mars – 5 avr", "days": ["30 mars", "31 mars", "1 avr", "2 avr", "3 avr", "4 avr", "5 avr"], "dates": ["03-30", "03-31", "04-01", "04-02", "04-03", "04-04", "04-05"]}, {"label": "6–12 Avril", "days": ["6 avr", "7 avr", "8 avr", "9 avr", "10 avr", "11 avr", "12 avr"], "dates": ["04-06", "04-07", "04-08", "04-09", "04-10", "04-11", "04-12"]}, {"label": "13–19 Avril", "days": ["13 avr", "14 avr", "15 avr", "16 avr", "17 avr", "18 avr", "19 avr"], "dates": ["04-13", "04-14", "04-15", "04-16", "04-17", "04-18", "04-19"]}, {"label": "20–26 Avril", "days": ["20 avr", "21 avr", "22 avr", "23 avr", "24 avr", "25 avr", "26 avr"], "dates": ["04-20", "04-21", "04-22", "04-23", "04-24", "04-25", "04-26"]}, {"label": "27 avr – 3 mai", "days": ["27 avr", "28 avr", "29 avr", "30 avr", "1 mai", "2 mai", "3 mai"], "dates": ["04-27", "04-28", "04-29", "04-30", "05-01", "05-02", "05-03"]}, {"label": "4–10 Mai", "days": ["4 mai", "5 mai", "6 mai", "7 mai", "8 mai", "9 mai", "10 mai"], "dates": ["05-04", "05-05", "05-06", "05-07", "05-08", "05-09", "05-10"]}, {"label": "11–17 Mai", "days": ["11 mai", "12 mai", "13 mai", "14 mai", "15 mai", "16 mai", "17 mai"], "dates": ["05-11", "05-12", "05-13", "05-14", "05-15", "05-16", "05-17"]}, {"label": "18–24 Mai", "days": ["18 mai", "19 mai", "20 mai", "21 mai", "22 mai", "23 mai", "24 mai"], "dates": ["05-18", "05-19", "05-20", "05-21", "05-22", "05-23", "05-24"]}, {"label": "25–31 Mai", "days": ["25 mai", "26 mai", "27 mai", "28 mai", "29 mai", "30 mai", "31 mai"], "dates": ["05-25", "05-26", "05-27", "05-28", "05-29", "05-30", "05-31"]}, {"label": "1–7 Juin", "days": ["1 juin", "2 juin", "3 juin", "4 juin", "5 juin", "6 juin", "7 juin"], "dates": ["06-01", "06-02", "06-03", "06-04", "06-05", "06-06", "06-07"]}, {"label": "8–14 Juin", "days": ["8 juin", "9 juin", "10 juin", "11 juin", "12 juin", "13 juin", "14 juin"], "dates": ["06-08", "06-09", "06-10", "06-11", "06-12", "06-13", "06-14"]}, {"label": "15–21 Juin", "days": ["15 juin", "16 juin", "17 juin", "18 juin", "19 juin", "20 juin", "21 juin"], "dates": ["06-15", "06-16", "06-17", "06-18", "06-19", "06-20", "06-21"]}, {"label": "22–28 Juin", "days": ["22 juin", "23 juin", "24 juin", "25 juin", "26 juin", "27 juin", "28 juin"], "dates": ["06-22", "06-23", "06-24", "06-25", "06-26", "06-27", "06-28"]}, {"label": "29 juin – 5 juil", "days": ["29 juin", "30 juin", "1 juil", "2 juil", "3 juil", "4 juil", "5 juil"], "dates": ["06-29", "06-30", "07-01", "07-02", "07-03", "07-04", "07-05"]}, {"label": "6–12 Juillet", "days": ["6 juil", "7 juil", "8 juil", "9 juil", "10 juil", "11 juil", "12 juil"], "dates": ["07-06", "07-07", "07-08", "07-09", "07-10", "07-11", "07-12"]}, {"label": "13–19 Juillet", "days": ["13 juil", "14 juil", "15 juil", "16 juil", "17 juil", "18 juil", "19 juil"], "dates": ["07-13", "07-14", "07-15", "07-16", "07-17", "07-18", "07-19"]}, {"label": "20–26 Juillet", "days": ["20 juil", "21 juil", "22 juil", "23 juil", "24 juil", "25 juil", "26 juil"], "dates": ["07-20", "07-21", "07-22", "07-23", "07-24", "07-25", "07-26"]}, {"label": "27 juil – 2 août", "days": ["27 juil", "28 juil", "29 juil", "30 juil", "31 juil", "1 août", "2 août"], "dates": ["07-27", "07-28", "07-29", "07-30", "07-31", "08-01", "08-02"]}, {"label": "3–9 Août", "days": ["3 août", "4 août", "5 août", "6 août", "7 août", "8 août", "9 août"], "dates": ["08-03", "08-04", "08-05", "08-06", "08-07", "08-08", "08-09"]}, {"label": "10–16 Août", "days": ["10 août", "11 août", "12 août", "13 août", "14 août", "15 août", "16 août"], "dates": ["08-10", "08-11", "08-12", "08-13", "08-14", "08-15", "08-16"]}, {"label": "17–23 Août", "days": ["17 août", "18 août", "19 août", "20 août", "21 août", "22 août", "23 août"], "dates": ["08-17", "08-18", "08-19", "08-20", "08-21", "08-22", "08-23"]}, {"label": "24–30 Août", "days": ["24 août", "25 août", "26 août", "27 août", "28 août", "29 août", "30 août"], "dates": ["08-24", "08-25", "08-26", "08-27", "08-28", "08-29", "08-30"]}, {"label": "31 août – 6 sep", "days": ["31 août", "1 sep", "2 sep", "3 sep", "4 sep", "5 sep", "6 sep"], "dates": ["08-31", "09-01", "09-02", "09-03", "09-04", "09-05", "09-06"]}, {"label": "7–13 Septembre", "days": ["7 sep", "8 sep", "9 sep", "10 sep", "11 sep", "12 sep", "13 sep"], "dates": ["09-07", "09-08", "09-09", "09-10", "09-11", "09-12", "09-13"]}, {"label": "14–20 Septembre", "days": ["14 sep", "15 sep", "16 sep", "17 sep", "18 sep", "19 sep", "20 sep"], "dates": ["09-14", "09-15", "09-16", "09-17", "09-18", "09-19", "09-20"]}, {"label": "21–27 Septembre", "days": ["21 sep", "22 sep", "23 sep", "24 sep", "25 sep", "26 sep", "27 sep"], "dates": ["09-21", "09-22", "09-23", "09-24", "09-25", "09-26", "09-27"]}, {"label": "28 sep – 4 oct", "days": ["28 sep", "29 sep", "30 sep", "1 oct", "2 oct", "3 oct", "4 oct"], "dates": ["09-28", "09-29", "09-30", "10-01", "10-02", "10-03", "10-04"]}, {"label": "5–11 Octobre", "days": ["5 oct", "6 oct", "7 oct", "8 oct", "9 oct", "10 oct", "11 oct"], "dates": ["10-05", "10-06", "10-07", "10-08", "10-09", "10-10", "10-11"]}, {"label": "12–18 Octobre", "days": ["12 oct", "13 oct", "14 oct", "15 oct", "16 oct", "17 oct", "18 oct"], "dates": ["10-12", "10-13", "10-14", "10-15", "10-16", "10-17", "10-18"]}, {"label": "19–25 Octobre", "days": ["19 oct", "20 oct", "21 oct", "22 oct", "23 oct", "24 oct", "25 oct"], "dates": ["10-19", "10-20", "10-21", "10-22", "10-23", "10-24", "10-25"]}, {"label": "26 oct – 1 nov", "days": ["26 oct", "27 oct", "28 oct", "29 oct", "30 oct", "31 oct", "1 nov"], "dates": ["10-26", "10-27", "10-28", "10-29", "10-30", "10-31", "11-01"]}, {"label": "2–8 Novembre", "days": ["2 nov", "3 nov", "4 nov", "5 nov", "6 nov", "7 nov", "8 nov"], "dates": ["11-02", "11-03", "11-04", "11-05", "11-06", "11-07", "11-08"]}, {"label": "9–15 Novembre", "days": ["9 nov", "10 nov", "11 nov", "12 nov", "13 nov", "14 nov", "15 nov"], "dates": ["11-09", "11-10", "11-11", "11-12", "11-13", "11-14", "11-15"]}, {"label": "16–22 Novembre", "days": ["16 nov", "17 nov", "18 nov", "19 nov", "20 nov", "21 nov", "22 nov"], "dates": ["11-16", "11-17", "11-18", "11-19", "11-20", "11-21", "11-22"]}, {"label": "23–29 Novembre", "days": ["23 nov", "24 nov", "25 nov", "26 nov", "27 nov", "28 nov", "29 nov"], "dates": ["11-23", "11-24", "11-25", "11-26", "11-27", "11-28", "11-29"]}, {"label": "30 nov – 6 déc", "days": ["30 nov", "1 déc", "2 déc", "3 déc", "4 déc", "5 déc", "6 déc"], "dates": ["11-30", "12-01", "12-02", "12-03", "12-04", "12-05", "12-06"]}, {"label": "7–13 Décembre", "days": ["7 déc", "8 déc", "9 déc", "10 déc", "11 déc", "12 déc", "13 déc"], "dates": ["12-07", "12-08", "12-09", "12-10", "12-11", "12-12", "12-13"]}, {"label": "14–20 Décembre", "days": ["14 déc", "15 déc", "16 déc", "17 déc", "18 déc", "19 déc", "20 déc"], "dates": ["12-14", "12-15", "12-16", "12-17", "12-18", "12-19", "12-20"]}, {"label": "21–27 Décembre", "days": ["21 déc", "22 déc", "23 déc", "24 déc", "25 déc", "26 déc", "27 déc"], "dates": ["12-21", "12-22", "12-23", "12-24", "12-25", "12-26", "12-27"]}, {"label": "28 déc – 3 jan", "days": ["28 déc", "29 déc", "30 déc", "31 déc", "1 jan", "2 jan", "3 jan"], "dates": ["12-28", "12-29", "12-30", "12-31", "01-01", "01-02", "01-03"]}];
-const PAGAN_EVENTS = [{"name": "Imbolc", "symbol": "🌱", "date": "02-01", "duration": 3}, {"name": "Ostara", "symbol": "🌸", "date": "03-20", "duration": 3}, {"name": "Beltane", "symbol": "🔥", "date": "05-01", "duration": 3}, {"name": "Litha", "symbol": "☀️", "date": "06-21", "duration": 3}, {"name": "Lughnasadh", "symbol": "🌾", "date": "08-01", "duration": 3}, {"name": "Mabon", "symbol": "🍂", "date": "09-22", "duration": 3}, {"name": "Samhain", "symbol": "🕯️", "date": "10-31", "duration": 3}, {"name": "Yule", "symbol": "❄️", "date": "12-21", "duration": 3}];
-const MOON_PHASES = [{"type": "full", "symbol": "🌕", "date": "01-03"}, {"type": "new", "symbol": "🌑", "date": "01-18"}, {"type": "full", "symbol": "🌕", "date": "02-01"}, {"type": "new", "symbol": "🌑", "date": "02-17"}, {"type": "full", "symbol": "🌕", "date": "03-03"}, {"type": "new", "symbol": "🌑", "date": "03-19"}, {"type": "full", "symbol": "🌕", "date": "04-01"}, {"type": "new", "symbol": "🌑", "date": "04-17"}, {"type": "full", "symbol": "🌕", "date": "05-01"}, {"type": "new", "symbol": "🌑", "date": "05-16"}, {"type": "full", "symbol": "🌕", "date": "05-31"}, {"type": "new", "symbol": "🌑", "date": "06-15"}, {"type": "full", "symbol": "🌕", "date": "06-29"}, {"type": "new", "symbol": "🌑", "date": "07-14"}, {"type": "full", "symbol": "🌕", "date": "07-29"}, {"type": "new", "symbol": "🌑", "date": "08-12"}, {"type": "full", "symbol": "🌕", "date": "08-28"}, {"type": "new", "symbol": "🌑", "date": "09-11"}, {"type": "full", "symbol": "🌕", "date": "09-26"}, {"type": "new", "symbol": "🌑", "date": "10-10"}, {"type": "full", "symbol": "🌕", "date": "10-26"}, {"type": "new", "symbol": "🌑", "date": "11-09"}, {"type": "full", "symbol": "🌕", "date": "11-24"}, {"type": "new", "symbol": "🌑", "date": "12-09"}, {"type": "full", "symbol": "🌕", "date": "12-24"}];
-let weekIdx = 9;
-let spiActive = false;
-let monthViewActive = false;
+const ALL_WEEKS=[{"label": "5–11 Janvier", "days": ["5 jan", "6 jan", "7 jan", "8 jan", "9 jan", "10 jan", "11 jan"], "dates": ["01-05", "01-06", "01-07", "01-08", "01-09", "01-10", "01-11"]}, {"label": "12–18 Janvier", "days": ["12 jan", "13 jan", "14 jan", "15 jan", "16 jan", "17 jan", "18 jan"], "dates": ["01-12", "01-13", "01-14", "01-15", "01-16", "01-17", "01-18"]}, {"label": "19–25 Janvier", "days": ["19 jan", "20 jan", "21 jan", "22 jan", "23 jan", "24 jan", "25 jan"], "dates": ["01-19", "01-20", "01-21", "01-22", "01-23", "01-24", "01-25"]}, {"label": "26 jan – 1 fév", "days": ["26 jan", "27 jan", "28 jan", "29 jan", "30 jan", "31 jan", "1 fév"], "dates": ["01-26", "01-27", "01-28", "01-29", "01-30", "01-31", "02-01"]}, {"label": "2–8 Février", "days": ["2 fév", "3 fév", "4 fév", "5 fév", "6 fév", "7 fév", "8 fév"], "dates": ["02-02", "02-03", "02-04", "02-05", "02-06", "02-07", "02-08"]}, {"label": "9–15 Février", "days": ["9 fév", "10 fév", "11 fév", "12 fév", "13 fév", "14 fév", "15 fév"], "dates": ["02-09", "02-10", "02-11", "02-12", "02-13", "02-14", "02-15"]}, {"label": "16–22 Février", "days": ["16 fév", "17 fév", "18 fév", "19 fév", "20 fév", "21 fév", "22 fév"], "dates": ["02-16", "02-17", "02-18", "02-19", "02-20", "02-21", "02-22"]}, {"label": "23 fév – 1 mars", "days": ["23 fév", "24 fév", "25 fév", "26 fév", "27 fév", "28 fév", "1 mars"], "dates": ["02-23", "02-24", "02-25", "02-26", "02-27", "02-28", "03-01"]}, {"label": "2–8 Mars", "days": ["2 mars", "3 mars", "4 mars", "5 mars", "6 mars", "7 mars", "8 mars"], "dates": ["03-02", "03-03", "03-04", "03-05", "03-06", "03-07", "03-08"]}, {"label": "9–15 Mars", "days": ["9 mars", "10 mars", "11 mars", "12 mars", "13 mars", "14 mars", "15 mars"], "dates": ["03-09", "03-10", "03-11", "03-12", "03-13", "03-14", "03-15"]}, {"label": "16–22 Mars", "days": ["16 mars", "17 mars", "18 mars", "19 mars", "20 mars", "21 mars", "22 mars"], "dates": ["03-16", "03-17", "03-18", "03-19", "03-20", "03-21", "03-22"]}, {"label": "23–29 Mars", "days": ["23 mars", "24 mars", "25 mars", "26 mars", "27 mars", "28 mars", "29 mars"], "dates": ["03-23", "03-24", "03-25", "03-26", "03-27", "03-28", "03-29"]}, {"label": "30 mars – 5 avr", "days": ["30 mars", "31 mars", "1 avr", "2 avr", "3 avr", "4 avr", "5 avr"], "dates": ["03-30", "03-31", "04-01", "04-02", "04-03", "04-04", "04-05"]}, {"label": "6–12 Avril", "days": ["6 avr", "7 avr", "8 avr", "9 avr", "10 avr", "11 avr", "12 avr"], "dates": ["04-06", "04-07", "04-08", "04-09", "04-10", "04-11", "04-12"]}, {"label": "13–19 Avril", "days": ["13 avr", "14 avr", "15 avr", "16 avr", "17 avr", "18 avr", "19 avr"], "dates": ["04-13", "04-14", "04-15", "04-16", "04-17", "04-18", "04-19"]}, {"label": "20–26 Avril", "days": ["20 avr", "21 avr", "22 avr", "23 avr", "24 avr", "25 avr", "26 avr"], "dates": ["04-20", "04-21", "04-22", "04-23", "04-24", "04-25", "04-26"]}, {"label": "27 avr – 3 mai", "days": ["27 avr", "28 avr", "29 avr", "30 avr", "1 mai", "2 mai", "3 mai"], "dates": ["04-27", "04-28", "04-29", "04-30", "05-01", "05-02", "05-03"]}, {"label": "4–10 Mai", "days": ["4 mai", "5 mai", "6 mai", "7 mai", "8 mai", "9 mai", "10 mai"], "dates": ["05-04", "05-05", "05-06", "05-07", "05-08", "05-09", "05-10"]}, {"label": "11–17 Mai", "days": ["11 mai", "12 mai", "13 mai", "14 mai", "15 mai", "16 mai", "17 mai"], "dates": ["05-11", "05-12", "05-13", "05-14", "05-15", "05-16", "05-17"]}, {"label": "18–24 Mai", "days": ["18 mai", "19 mai", "20 mai", "21 mai", "22 mai", "23 mai", "24 mai"], "dates": ["05-18", "05-19", "05-20", "05-21", "05-22", "05-23", "05-24"]}, {"label": "25–31 Mai", "days": ["25 mai", "26 mai", "27 mai", "28 mai", "29 mai", "30 mai", "31 mai"], "dates": ["05-25", "05-26", "05-27", "05-28", "05-29", "05-30", "05-31"]}, {"label": "1–7 Juin", "days": ["1 juin", "2 juin", "3 juin", "4 juin", "5 juin", "6 juin", "7 juin"], "dates": ["06-01", "06-02", "06-03", "06-04", "06-05", "06-06", "06-07"]}, {"label": "8–14 Juin", "days": ["8 juin", "9 juin", "10 juin", "11 juin", "12 juin", "13 juin", "14 juin"], "dates": ["06-08", "06-09", "06-10", "06-11", "06-12", "06-13", "06-14"]}, {"label": "15–21 Juin", "days": ["15 juin", "16 juin", "17 juin", "18 juin", "19 juin", "20 juin", "21 juin"], "dates": ["06-15", "06-16", "06-17", "06-18", "06-19", "06-20", "06-21"]}, {"label": "22–28 Juin", "days": ["22 juin", "23 juin", "24 juin", "25 juin", "26 juin", "27 juin", "28 juin"], "dates": ["06-22", "06-23", "06-24", "06-25", "06-26", "06-27", "06-28"]}, {"label": "29 juin – 5 juil", "days": ["29 juin", "30 juin", "1 juil", "2 juil", "3 juil", "4 juil", "5 juil"], "dates": ["06-29", "06-30", "07-01", "07-02", "07-03", "07-04", "07-05"]}, {"label": "6–12 Juillet", "days": ["6 juil", "7 juil", "8 juil", "9 juil", "10 juil", "11 juil", "12 juil"], "dates": ["07-06", "07-07", "07-08", "07-09", "07-10", "07-11", "07-12"]}, {"label": "13–19 Juillet", "days": ["13 juil", "14 juil", "15 juil", "16 juil", "17 juil", "18 juil", "19 juil"], "dates": ["07-13", "07-14", "07-15", "07-16", "07-17", "07-18", "07-19"]}, {"label": "20–26 Juillet", "days": ["20 juil", "21 juil", "22 juil", "23 juil", "24 juil", "25 juil", "26 juil"], "dates": ["07-20", "07-21", "07-22", "07-23", "07-24", "07-25", "07-26"]}, {"label": "27 juil – 2 août", "days": ["27 juil", "28 juil", "29 juil", "30 juil", "31 juil", "1 août", "2 août"], "dates": ["07-27", "07-28", "07-29", "07-30", "07-31", "08-01", "08-02"]}, {"label": "3–9 Août", "days": ["3 août", "4 août", "5 août", "6 août", "7 août", "8 août", "9 août"], "dates": ["08-03", "08-04", "08-05", "08-06", "08-07", "08-08", "08-09"]}, {"label": "10–16 Août", "days": ["10 août", "11 août", "12 août", "13 août", "14 août", "15 août", "16 août"], "dates": ["08-10", "08-11", "08-12", "08-13", "08-14", "08-15", "08-16"]}, {"label": "17–23 Août", "days": ["17 août", "18 août", "19 août", "20 août", "21 août", "22 août", "23 août"], "dates": ["08-17", "08-18", "08-19", "08-20", "08-21", "08-22", "08-23"]}, {"label": "24–30 Août", "days": ["24 août", "25 août", "26 août", "27 août", "28 août", "29 août", "30 août"], "dates": ["08-24", "08-25", "08-26", "08-27", "08-28", "08-29", "08-30"]}, {"label": "31 août – 6 sep", "days": ["31 août", "1 sep", "2 sep", "3 sep", "4 sep", "5 sep", "6 sep"], "dates": ["08-31", "09-01", "09-02", "09-03", "09-04", "09-05", "09-06"]}, {"label": "7–13 Septembre", "days": ["7 sep", "8 sep", "9 sep", "10 sep", "11 sep", "12 sep", "13 sep"], "dates": ["09-07", "09-08", "09-09", "09-10", "09-11", "09-12", "09-13"]}, {"label": "14–20 Septembre", "days": ["14 sep", "15 sep", "16 sep", "17 sep", "18 sep", "19 sep", "20 sep"], "dates": ["09-14", "09-15", "09-16", "09-17", "09-18", "09-19", "09-20"]}, {"label": "21–27 Septembre", "days": ["21 sep", "22 sep", "23 sep", "24 sep", "25 sep", "26 sep", "27 sep"], "dates": ["09-21", "09-22", "09-23", "09-24", "09-25", "09-26", "09-27"]}, {"label": "28 sep – 4 oct", "days": ["28 sep", "29 sep", "30 sep", "1 oct", "2 oct", "3 oct", "4 oct"], "dates": ["09-28", "09-29", "09-30", "10-01", "10-02", "10-03", "10-04"]}, {"label": "5–11 Octobre", "days": ["5 oct", "6 oct", "7 oct", "8 oct", "9 oct", "10 oct", "11 oct"], "dates": ["10-05", "10-06", "10-07", "10-08", "10-09", "10-10", "10-11"]}, {"label": "12–18 Octobre", "days": ["12 oct", "13 oct", "14 oct", "15 oct", "16 oct", "17 oct", "18 oct"], "dates": ["10-12", "10-13", "10-14", "10-15", "10-16", "10-17", "10-18"]}, {"label": "19–25 Octobre", "days": ["19 oct", "20 oct", "21 oct", "22 oct", "23 oct", "24 oct", "25 oct"], "dates": ["10-19", "10-20", "10-21", "10-22", "10-23", "10-24", "10-25"]}, {"label": "26 oct – 1 nov", "days": ["26 oct", "27 oct", "28 oct", "29 oct", "30 oct", "31 oct", "1 nov"], "dates": ["10-26", "10-27", "10-28", "10-29", "10-30", "10-31", "11-01"]}, {"label": "2–8 Novembre", "days": ["2 nov", "3 nov", "4 nov", "5 nov", "6 nov", "7 nov", "8 nov"], "dates": ["11-02", "11-03", "11-04", "11-05", "11-06", "11-07", "11-08"]}, {"label": "9–15 Novembre", "days": ["9 nov", "10 nov", "11 nov", "12 nov", "13 nov", "14 nov", "15 nov"], "dates": ["11-09", "11-10", "11-11", "11-12", "11-13", "11-14", "11-15"]}, {"label": "16–22 Novembre", "days": ["16 nov", "17 nov", "18 nov", "19 nov", "20 nov", "21 nov", "22 nov"], "dates": ["11-16", "11-17", "11-18", "11-19", "11-20", "11-21", "11-22"]}, {"label": "23–29 Novembre", "days": ["23 nov", "24 nov", "25 nov", "26 nov", "27 nov", "28 nov", "29 nov"], "dates": ["11-23", "11-24", "11-25", "11-26", "11-27", "11-28", "11-29"]}, {"label": "30 nov – 6 déc", "days": ["30 nov", "1 déc", "2 déc", "3 déc", "4 déc", "5 déc", "6 déc"], "dates": ["11-30", "12-01", "12-02", "12-03", "12-04", "12-05", "12-06"]}, {"label": "7–13 Décembre", "days": ["7 déc", "8 déc", "9 déc", "10 déc", "11 déc", "12 déc", "13 déc"], "dates": ["12-07", "12-08", "12-09", "12-10", "12-11", "12-12", "12-13"]}, {"label": "14–20 Décembre", "days": ["14 déc", "15 déc", "16 déc", "17 déc", "18 déc", "19 déc", "20 déc"], "dates": ["12-14", "12-15", "12-16", "12-17", "12-18", "12-19", "12-20"]}, {"label": "21–27 Décembre", "days": ["21 déc", "22 déc", "23 déc", "24 déc", "25 déc", "26 déc", "27 déc"], "dates": ["12-21", "12-22", "12-23", "12-24", "12-25", "12-26", "12-27"]}, {"label": "28 déc – 3 jan", "days": ["28 déc", "29 déc", "30 déc", "31 déc", "1 jan", "2 jan", "3 jan"], "dates": ["12-28", "12-29", "12-30", "12-31", "01-01", "01-02", "01-03"]}];
+const PAGAN_EVENTS=[{"name": "Imbolc", "date": "02-01", "duration": 3}, {"name": "Ostara", "date": "03-20", "duration": 3}, {"name": "Beltane", "date": "05-01", "duration": 3}, {"name": "Litha", "date": "06-21", "duration": 3}, {"name": "Lughnasadh", "date": "08-01", "duration": 3}, {"name": "Mabon", "date": "09-22", "duration": 3}, {"name": "Samhain", "date": "10-31", "duration": 3}, {"name": "Yule", "date": "12-21", "duration": 3}];
+const MOON_PHASES=[{"type": "full", "date": "01-03"}, {"type": "new", "date": "01-18"}, {"type": "full", "date": "02-01"}, {"type": "new", "date": "02-17"}, {"type": "full", "date": "03-03"}, {"type": "new", "date": "03-19"}, {"type": "full", "date": "04-01"}, {"type": "new", "date": "04-17"}, {"type": "full", "date": "05-01"}, {"type": "new", "date": "05-16"}, {"type": "full", "date": "05-31"}, {"type": "new", "date": "06-15"}, {"type": "full", "date": "06-29"}, {"type": "new", "date": "07-14"}, {"type": "full", "date": "07-29"}, {"type": "new", "date": "08-12"}, {"type": "full", "date": "08-28"}, {"type": "new", "date": "09-11"}, {"type": "full", "date": "09-26"}, {"type": "new", "date": "10-10"}, {"type": "full", "date": "10-26"}, {"type": "new", "date": "11-09"}, {"type": "full", "date": "11-24"}, {"type": "new", "date": "12-09"}, {"type": "full", "date": "12-24"}];
+let weekIdx=9;
+let spiActive=false;
+let monthViewActive=false;
 
 let isNight = false;
 
@@ -720,8 +720,8 @@ let isNight = false;
 const STORAGE_KEY = 'agenda-cylindrique-v1';
 
 function defaultData() {
-  const names = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
-  return names.map(name => ({ name, tasks: [], nightTasks: [] }));
+  const n=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+  return n.map(name=>({name,tasks:[],nightTasks:[]}));
 }
 // Load or init
 let DATA = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || defaultData();
@@ -742,47 +742,881 @@ function getTaskList(di) {
 }
 
 // ── RENDER ──
+function render() {
+  const wrap = document.getElementById('cols-wrap');
+  const scrolls = {};
+  wrap.querySelectorAll('.col-body').forEach((el,i) => scrolls[i] = el.scrollTop);
+  wrap.innerHTML = '';
 
+  const hours = isNight ? NIGHT_HOURS : DAY_HOURS;
+  document.getElementById('week-label').textContent = ALL_WEEKS[weekIdx]?ALL_WEEKS[weekIdx].label:'';
+  document.getElementById('mode-badge').textContent = isNight ? 'face nuit' : 'face jour';
+  document.getElementById('mode-badge').className = 'mode-badge' + (isNight ? ' night' : '');
+  document.getElementById('flip-btn').className = 'flip-btn' + (isNight ? ' night' : '');
 
+  const nowH = new Date().getHours();
 
-function getSpiVisual(mmdd) {
-  for (const ev of PAGAN_EVENTS) {
-    const evDate = new Date('2026-' + ev.date);
-    const checkDate = new Date('2026-' + mmdd);
-    const diff = Math.floor((checkDate - evDate) / 86400000);
-    if (diff >= 0 && diff < ev.duration) {
-      return { type:'pagan', name: ev.name, svg: getSpiSvg(ev.name) };
+  DATA.forEach((day, di) => {
+    const dayCol = document.createElement('div');
+    dayCol.className = 'day-col';
+
+    const mainCol = document.createElement('div');
+    mainCol.className = 'main-col';
+
+    // Header
+    const hdr = document.createElement('div');
+    hdr.className = 'day-header';
+    if (isNight) hdr.style.background = '#080810';
+    const taskList = isNight ? day.nightTasks : day.tasks;
+    const realTasks = taskList.filter(t => t.cat !== 'libre').length;
+        {
+      const _dc = ALL_WEEKS[weekIdx] ? ALL_WEEKS[weekIdx].dates[di] : '';
+      const _sv = spiActive ? getSpiVisual(_dc) : null;
+      const _svHtml = _sv ? '<div style="position:absolute;top:3px;right:4px;line-height:1;" title="'+_sv.name+'">'+_sv.svg+'</div>' : '';
+      hdr.innerHTML = '<div class="day-name">'+day.name+'</div>'
+        + '<div class="day-date-lbl">'+(ALL_WEEKS[weekIdx]?ALL_WEEKS[weekIdx].days[di]:'')+'</div>'
+        + '<div class="day-task-count">'+realTasks+' tâche'+(realTasks!==1?'s':'')+'</div>'
+        + _svHtml;
     }
-  }
-  for (const m of MOON_PHASES) {
-    if (m.date === mmdd) {
-      const label = m.type==='full' ? 'Pleine lune' : 'Nouvelle lune';
-      return { type:'moon', name: label, svg: getMoonSvg(m.type) };
+    mainCol.appendChild(hdr);
+
+    // Scrollable body
+    const dayThemeMap = {'Lundi':'lundi','Mardi':'mardi','Mercredi':'mercredi','Jeudi':'jeudi','Vendredi':'vendredi','Samedi':'samedi','Dimanche':'dimanche'};
+    const dayTheme = !isNight ? (' day-theme-' + (dayThemeMap[day.name] || '')) : '';
+    dayCol.className = 'day-col' + dayTheme;
+    const body = document.createElement('div');
+    body.className = 'col-body' + (isNight ? ' night-mode' : '');
+
+    hours.forEach(h => {
+      const row = document.createElement('div');
+      const lunchDays = [0,1,3,4];
+      const isLunch = !isNight && lunchDays.includes(di) && (h === 12 || h === 13);
+      const isLunchTop = !isNight && lunchDays.includes(di) && h === 12;
+      const isLunchBottom = !isNight && lunchDays.includes(di) && h === 13;
+      let rowClass = 'hour-row' + (isNight ? ' night-row' : '');
+      if (isLunch) rowClass += ' lunch-zone';
+      if (isLunchTop) rowClass += ' lunch-border-top';
+      if (isLunchBottom) rowClass += ' lunch-border-bottom';
+      row.className = rowClass;
+      row.setAttribute('data-di',di);row.setAttribute('data-h',h);row.dataset.di=di;row.dataset.h=h;
+      row.addEventListener('dragover', (e) => { e.preventDefault(); row.classList.add('drag-over'); });
+      row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+      row.addEventListener('drop', (e) => {
+        e.preventDefault();
+        row.classList.remove('drag-over');
+        try {
+          const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+          const toDi = parseInt(row.getAttribute('data-di'));
+          const toH = parseInt(row.getAttribute('data-h'));
+
+          if (data.type === 'subtask') {
+            // Move subtask to new day as standalone task
+            const fromList = data.isNight ? DATA[data.fromDi].nightTasks : DATA[data.fromDi].tasks;
+            const fromTask = fromList[data.fromIdx];
+            // Mark subtask as done in original task
+            if (!fromTask.done) fromTask.done = {};
+            fromTask.done[data.subIdx] = true;
+            // Create new standalone task on target day
+            const toList = DATA[toDi].tasks;
+            toList.push({ h: toH, title: data.subText, cat: fromTask.cat, subs: [], done: {} });
+            toList.sort((a,b) => a.h - b.h);
+          } else {
+            // Move whole task
+            const fromList = data.isNight ? DATA[data.fromDi].nightTasks : DATA[data.fromDi].tasks;
+            const toList = DATA[toDi].tasks;
+            const task = fromList.splice(data.globalIdx, 1)[0];
+            task.h = toH;
+            toList.push(task);
+            toList.sort((a,b) => a.h - b.h);
+          }
+          save(); render();
+        } catch(err) { console.error(err); }
+      });
+      const isNow = !isNight && weekIdx === 0 && h === nowH;
+      if (isNow) row.classList.add('hour-now');
+
+      const lbl = document.createElement('div');
+      lbl.className = 'hour-label';
+      lbl.textContent = (h < 0 ? h+24 : h) + 'h';
+      row.appendChild(lbl);
+
+      if (isNow) {
+        const nowLine = document.createElement('div');
+        nowLine.className = 'now-line';
+        const mins = new Date().getMinutes();
+        nowLine.style.top = Math.round((mins/60)*62) + 'px';
+        row.appendChild(nowLine);
+      }
+
+      const content = document.createElement('div');
+      content.className = 'hour-content';
+
+      const tasks = taskList.filter(t => t.h === h);
+      if (tasks.length === 0) {
+        const slot = document.createElement('div');
+        slot.className = 'add-slot';
+        slot.onclick = () => openAddModal(di, h, isNight);
+        content.appendChild(slot);
+      } else {
+        tasks.forEach((task, ti) => {
+          const globalIdx = taskList.indexOf(task);
+          const cardId = `${isNight?'n':'d'}${di}-h${h}-ti${ti}`;
+          content.appendChild(makeTaskPill(task, cardId, di, globalIdx));
+        });
+      }
+
+      row.appendChild(content);
+      body.appendChild(row);
+    });
+
+    mainCol.appendChild(body);
+    dayCol.appendChild(mainCol);
+    wrap.appendChild(dayCol);
+
+    // Night bridge
+    if (di < DATA.length - 1) {
+      wrap.appendChild(makeBridge(isNight));
     }
-  }
-  return null;
+
+    if (scrolls[di] !== undefined) body.scrollTop = scrolls[di];
+  });
+  applyCylinderEffect();
+  applyCylinderEffect();
+
+  // Drag scroll
+  const hs = document.getElementById('hscroll');
+  let isDown = false, startX, scrollLeft;
+  hs.onmousedown = e => { if (e.target.closest('.task-pill,.modal-input,.modal-select,.sub-check,.add-slot')) return; isDown=true; startX=e.pageX-hs.offsetLeft; scrollLeft=hs.scrollLeft; };
+  document.onmouseup = () => isDown = false;
+  hs.onmousemove = e => { if (!isDown) return; e.preventDefault(); const x=e.pageX-hs.offsetLeft; hs.scrollLeft=scrollLeft-(x-startX)*1.1; };
+
+  // Touch scroll axis-locked + week swipe
+  let _tx=null,_ty=null,_tAxis=null,_tSL=null;
+  hs.ontouchstart=e=>{
+    if(e.target.closest('.task-pill,.sub-item'))return;
+    _tx=e.touches[0].pageX;_ty=e.touches[0].pageY;_tSL=hs.scrollLeft;scrollLeft=hs.scrollLeft;_tAxis=null;
+  };
+  hs.ontouchmove=e=>{
+    if(_tx===null)return;
+    const dx=Math.abs(e.touches[0].pageX-_tx),dy=Math.abs(e.touches[0].pageY-_ty);
+    if(!_tAxis)_tAxis=dx>dy?'h':'v';
+    if(_tAxis==='h'){e.preventDefault();hs.scrollLeft=_tSL+(_tx-e.touches[0].pageX);}
+  };
+  hs.ontouchend=e=>{
+    if(_tAxis==='h'&&_tx!==null){
+      const swipe=_tx-e.changedTouches[0].pageX;
+      if(swipe>80&&hs.scrollLeft+hs.clientWidth>=hs.scrollWidth-20)nextWeek();
+      else if(swipe<-80&&hs.scrollLeft<=20)prevWeek();
+    }
+    _tx=null;_ty=null;_tAxis=null;
+  };
 }
 
+function makeTaskPill(task, cardId, di, globalIdx) {
+  const pill = document.createElement('div');
+  pill.className = `task-pill cat-${task.cat}`;
+  pill.dataset.di = di;
+  pill.dataset.idx = globalIdx;
+  pill.setAttribute('draggable','true');
+  pill.style.webkitUserSelect='none';pill.style.userSelect='none';
+  pill.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',JSON.stringify({di,globalIdx,isNight:modalIsNight||isNight}));setTimeout(()=>pill.classList.add('drag-ghost'),0);});
+  pill.addEventListener('dragend',()=>pill.classList.remove('drag-ghost'));
+  let _pg=null,_pd=false,_pt=null;
+  pill.addEventListener('touchstart',e=>{
+    e.stopPropagation();_pd=false;const t=e.touches[0];
+    _pt=setTimeout(()=>{
+      _pd=true;pill.classList.add('drag-ghost');
+      _pg=document.createElement('div');_pg.textContent=task.title;
+      _pg.style.cssText='position:fixed;z-index:9998;padding:7px 13px;background:var(--surface);border:1.5px solid var(--accent);border-radius:10px;font-size:13px;pointer-events:none;opacity:0.9;box-shadow:0 4px 16px rgba(0,0,0,0.12);white-space:nowrap;max-width:150px;overflow:hidden;';
+      _pg.style.left=t.clientX+12+'px';_pg.style.top=t.clientY-24+'px';
+      document.body.appendChild(_pg);
+    },380);
+  },{passive:true});
+  pill.addEventListener('touchmove',e=>{
+    if(!_pd){clearTimeout(_pt);return;}
+    e.preventDefault();const t=e.touches[0];
+    if(_pg){_pg.style.left=t.clientX+12+'px';_pg.style.top=t.clientY-24+'px';}
+    document.querySelectorAll('.hour-row.drag-over').forEach(el=>el.classList.remove('drag-over'));
+    const under=document.elementFromPoint(t.clientX,t.clientY);
+    if(under){const row=under.closest('.hour-row');if(row)row.classList.add('drag-over');}
+  },{passive:false});
+  pill.addEventListener('touchend',e=>{
+    clearTimeout(_pt);pill.classList.remove('drag-ghost');
+    if(_pg){_pg.remove();_pg=null;}
+    document.querySelectorAll('.hour-row.drag-over').forEach(el=>el.classList.remove('drag-over'));
+    if(!_pd)return;_pd=false;
+    const t=e.changedTouches[0],under=document.elementFromPoint(t.clientX,t.clientY);
+    if(!under)return;
+    const row=under.closest('.hour-row');
+    if(row){
+      const toDi=parseInt(row.dataset.di),toH=parseInt(row.dataset.h);
+      const fromList=(isNight||modalIsNight)?DATA[di].nightTasks:DATA[di].tasks;
+      const moved=fromList.splice(globalIdx,1)[0];
+      if(moved){moved.h=toH;DATA[toDi].tasks.push(moved);DATA[toDi].tasks.sort((a,b)=>a.h-b.h);save();render();}
+    }
+  });
+  pill.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    pill.classList.add('sub-drop-target');
+  });
+  pill.addEventListener('dragleave', () => pill.classList.remove('sub-drop-target'));
+  pill.addEventListener('drop', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    pill.classList.remove('sub-drop-target');
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+      if (data.type !== 'subtask') return;
+      // Show confirm dialog
+      _pendingSubDrop = {
+        fromDi: data.fromDi, fromIdx: data.fromIdx,
+        subIdx: data.subIdx, subText: data.subText,
+        isNight: data.isNight,
+        toDi: di, toTaskIdx: globalIdx
+      };
+      document.getElementById('sub-confirm-msg').textContent =
+        `Ajouter « ${data.subText} » dans la tâche « ${task.title} » ?`;
+      document.getElementById('sub-confirm-modal').classList.add('show');
+    } catch(err) { console.error(err); }
+  });
+  const isOpen = !!expanded[cardId];
+  const hasSubs = task.subs && task.subs.length > 0;
+
+  const header = document.createElement('div');
+  header.className = 'task-pill-header';
+
+  const titleEl = document.createElement('div');
+  titleEl.className = 'task-pill-title';
+  titleEl.textContent = task.title;
+  titleEl.onclick = () => { if(hasSubs){expanded[cardId]=!expanded[cardId];render();} else openEditModal(di, globalIdx); };
+  header.appendChild(titleEl);
+
+  const actions = document.createElement('div');
+  actions.className = 'task-actions';
+
+  const editBtn = document.createElement('button');
+  editBtn.className = 'task-action-btn';
+  editBtn.textContent = '✎';
+  editBtn.title = 'Modifier';
+  editBtn.onclick = (e) => { e.stopPropagation(); openEditModal(di, globalIdx); };
+  actions.appendChild(editBtn);
+
+  const transferBtn = document.createElement('button');
+  transferBtn.className = 'task-action-btn';
+  transferBtn.textContent = '→';
+  transferBtn.title = 'Transférer';
+  transferBtn.onclick = (e) => { e.stopPropagation(); openTransfer(task, di, globalIdx); };
+  actions.appendChild(transferBtn);
+
+  if (hasSubs) {
+    const arrow = document.createElement('span');
+    arrow.className = 'expand-arrow' + (isOpen ? ' open' : '');
+    arrow.textContent = '▾';
+    arrow.onclick = () => { expanded[cardId]=!expanded[cardId]; render(); };
+    actions.appendChild(arrow);
+  }
+
+  header.appendChild(actions);
+  pill.appendChild(header);
+
+  if (hasSubs) {
+    const drawer = document.createElement('div');
+    drawer.className = 'subtask-drawer' + (isOpen ? ' open' : '');
+    task.subs.forEach((sub, si) => {
+      const key = cardId + '-' + si;
+      const isDone = checked[key] !== undefined ? checked[key] : (task.done && task.done[si]);
+      // If done, skip rendering (hide completed subtasks)
+      if (isDone) return;
+      const item = document.createElement('div');
+      item.className = 'sub-item';
+      item.setAttribute('draggable', 'true');
+      item.style.cssText = 'cursor:grab; touch-action:none;';
+      const subPayload = JSON.stringify({
+        type: 'subtask', fromDi: di, fromIdx: globalIdx,
+        subIdx: si, subText: sub, h: task.h, isNight: isNight||false
+      });
+      // Desktop drag
+      item.addEventListener('dragstart', (e) => {
+        e.stopPropagation();
+        e.dataTransfer.setData('text/plain', subPayload);
+        setTimeout(() => item.style.opacity = '0.4', 0);
+      });
+      item.addEventListener('dragend', () => item.style.opacity = '1');
+      // Touch drag — creates floating ghost
+      let touchGhost = null;
+      item.addEventListener('touchstart', (e) => {
+        e.stopPropagation();
+        const touch = e.touches[0];
+        touchGhost = document.createElement('div');
+        touchGhost.textContent = sub;
+        touchGhost.style.cssText = `position:fixed;z-index:9998;padding:6px 12px;background:var(--surface);border:1px solid var(--accent);border-radius:8px;font-size:12px;color:var(--text);pointer-events:none;opacity:0.9;left:${touch.clientX+10}px;top:${touch.clientY-20}px;`;
+        document.body.appendChild(touchGhost);
+        item.style.opacity = '0.4';
+      }, {passive:true});
+      item.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        if (touchGhost) { touchGhost.style.left = touch.clientX+10+'px'; touchGhost.style.top = touch.clientY-20+'px'; }
+        // Highlight element under finger
+        document.querySelectorAll('.sub-drop-target,.hour-row.drag-over').forEach(el => {
+          el.classList.remove('sub-drop-target','drag-over');
+        });
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (el) {
+          const pill = el.closest('.task-pill');
+          const row = el.closest('.hour-row');
+          if (pill) pill.classList.add('sub-drop-target');
+          if (row) row.classList.add('drag-over');
+        }
+      }, {passive:false});
+      item.addEventListener('touchend', (e) => {
+        item.style.opacity = '1';
+        if (touchGhost) { touchGhost.remove(); touchGhost = null; }
+        document.querySelectorAll('.sub-drop-target,.hour-row.drag-over').forEach(el => el.classList.remove('sub-drop-target','drag-over'));
+        const touch = e.changedTouches[0];
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (!el) return;
+        const targetPill = el.closest('.task-pill');
+        const targetRow = el.closest('.hour-row');
+        const data = JSON.parse(subPayload);
+        if (targetPill && !targetPill.isSameNode(pill)) {
+          // Drop on another task — get its info from data attribute
+          const toDi = parseInt(targetPill.dataset.di);
+          const toIdx = parseInt(targetPill.dataset.idx);
+          if (!isNaN(toDi) && !isNaN(toIdx)) {
+            const toTask = DATA[toDi].tasks[toIdx] || DATA[toDi].nightTasks[toIdx];
+            _pendingSubDrop = { fromDi: data.fromDi, fromIdx: data.fromIdx, subIdx: data.subIdx, subText: data.subText, isNight: data.isNight, toDi, toTaskIdx: toIdx };
+            document.getElementById('sub-confirm-msg').textContent = `Ajouter « \${data.subText} » dans « \${toTask ? toTask.title : '?'} » ?`;
+            document.getElementById('sub-confirm-modal').classList.add('show');
+          }
+        } else if (targetRow) {
+          const toDi = parseInt(targetRow.getAttribute('data-di'));
+          const toH = parseInt(targetRow.getAttribute('data-h'));
+          const fromList = data.isNight ? DATA[data.fromDi].nightTasks : DATA[data.fromDi].tasks;
+          const fromTask = fromList[data.fromIdx];
+          if (!fromTask.done) fromTask.done = {};
+          fromTask.done[data.subIdx] = true;
+          DATA[toDi].tasks.push({ h: toH, title: data.subText, cat: fromTask.cat, subs: [], done: {} });
+          DATA[toDi].tasks.sort((a,b) => a.h - b.h);
+          save(); render();
+        }
+      });
+      const chk = document.createElement('div');
+      chk.className = 'sub-check';
+      chk.onclick = (e) => {
+        e.stopPropagation();
+        // Mark done — permanently remove from subs and save
+        if (!task.done) task.done = {};
+        task.done[si] = true;
+        checked[key] = true;
+        save(); render();
+      };
+      const lbl = document.createElement('span');
+      lbl.className = 'sub-label';
+      lbl.textContent = sub;
+      // Small drag hint icon
+      const grip = document.createElement('span');
+      grip.textContent = '⠿';
+      grip.style.cssText = 'opacity:0.3;font-size:9px;margin-left:4px;flex-shrink:0;';
+      item.appendChild(chk); item.appendChild(lbl); item.appendChild(grip);
+      drawer.appendChild(item);
+    });
+    pill.appendChild(drawer);
+  }
+  return pill;
+}
+
+function makeBridge(night) {
+  const bridge = document.createElement('div');
+  bridge.className = 'night-bridge';
+  const ns = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  ns.setAttribute('viewBox', '0 0 26 400');
+  ns.setAttribute('preserveAspectRatio', 'none');
+  ns.style.cssText = 'position:absolute;left:0;top:0;width:26px;height:100%';
+
+  ns.innerHTML = `
+    <rect x="0" y="0" width="26" height="400" fill="rgba(3,3,16,0.88)"/>
+    <ellipse cx="13" cy="120" rx="16" ry="55" fill="rgba(80,50,200,0.05)"/>
+<ellipse cx="10" cy="280" rx="14" ry="45" fill="rgba(50,80,180,0.04)"/>
+<ellipse cx="16" cy="200" rx="12" ry="70" fill="rgba(120,80,220,0.04)"/>
+<line x1="6.8" y1="97.0" x2="9.4" y2="104.8" stroke="rgba(200,200,255,0.17)" stroke-width="0.77" stroke-linecap="round"/>
+<line x1="4.6" y1="167.9" x2="6.0" y2="182.7" stroke="rgba(200,200,255,0.14)" stroke-width="0.6" stroke-linecap="round"/>
+<line x1="6.8" y1="321.2" x2="5.4" y2="333.1" stroke="rgba(200,200,255,0.12)" stroke-width="0.47" stroke-linecap="round"/>
+<line x1="14.2" y1="218.4" x2="8.3" y2="245.7" stroke="rgba(200,200,255,0.18)" stroke-width="0.76" stroke-linecap="round"/>
+<line x1="7.3" y1="215.1" x2="12.8" y2="236.1" stroke="rgba(200,200,255,0.07)" stroke-width="0.72" stroke-linecap="round"/>
+<line x1="12.4" y1="343.6" x2="16.6" y2="356.6" stroke="rgba(200,200,255,0.13)" stroke-width="0.55" stroke-linecap="round"/>
+<line x1="15.6" y1="235.9" x2="20.6" y2="256.9" stroke="rgba(200,200,255,0.14)" stroke-width="0.89" stroke-linecap="round"/>
+<line x1="15.4" y1="343.3" x2="11.2" y2="363.8" stroke="rgba(200,200,255,0.11)" stroke-width="0.71" stroke-linecap="round"/>
+<line x1="17.8" y1="34.3" x2="21.4" y2="47.7" stroke="rgba(200,200,255,0.08)" stroke-width="0.39" stroke-linecap="round"/>
+<line x1="13.4" y1="369.2" x2="21.2" y2="386.1" stroke="rgba(200,200,255,0.16)" stroke-width="0.48" stroke-linecap="round"/>
+<line x1="20.0" y1="183.1" x2="26.2" y2="206.4" stroke="rgba(200,200,255,0.1)" stroke-width="0.38" stroke-linecap="round"/>
+<line x1="23.1" y1="53.5" x2="33.1" y2="78.9" stroke="rgba(200,200,255,0.15)" stroke-width="0.99" stroke-linecap="round"/>
+<line x1="23.2" y1="305.7" x2="27.8" y2="320.3" stroke="rgba(200,200,255,0.06)" stroke-width="0.68" stroke-linecap="round"/>
+<line x1="11.5" y1="255.7" x2="13.4" y2="277.0" stroke="rgba(200,200,255,0.16)" stroke-width="0.96" stroke-linecap="round"/>
+<line x1="3.5" y1="88.9" x2="6.8" y2="96.7" stroke="rgba(200,200,255,0.13)" stroke-width="0.94" stroke-linecap="round"/>
+<line x1="6.1" y1="24.0" x2="16.3" y2="46.3" stroke="rgba(200,200,255,0.1)" stroke-width="0.59" stroke-linecap="round"/>
+<line x1="4.2" y1="359.6" x2="4.1" y2="373.7" stroke="rgba(200,200,255,0.07)" stroke-width="0.92" stroke-linecap="round"/>
+<line x1="4.1" y1="172.4" x2="9.5" y2="193.1" stroke="rgba(200,200,255,0.17)" stroke-width="0.59" stroke-linecap="round"/>
+<circle cx="16.5" cy="10.0" r="0.26" fill="rgba(255,255,255,0.35)"/>
+<circle cx="18.9" cy="270.7" r="0.51" fill="rgba(255,255,255,0.26)"/>
+<circle cx="11.0" cy="11.9" r="0.24" fill="rgba(255,255,255,0.53)"/>
+<circle cx="1.2" cy="79.5" r="0.41" fill="rgba(255,255,255,0.55)"/>
+<circle cx="6.0" cy="235.7" r="0.47" fill="rgba(255,255,255,0.2)"/>
+<circle cx="20.6" cy="279.3" r="0.29" fill="rgba(255,255,255,0.3)"/>
+<circle cx="24.4" cy="134.6" r="0.19" fill="rgba(255,255,255,0.26)"/>
+<circle cx="21.7" cy="241.5" r="0.47" fill="rgba(255,255,255,0.67)"/>
+<circle cx="13.9" cy="389.2" r="0.3" fill="rgba(255,255,255,0.56)"/>
+<circle cx="21.2" cy="247.4" r="0.49" fill="rgba(255,255,255,0.58)"/>
+<circle cx="18.1" cy="18.3" r="0.24" fill="rgba(255,255,255,0.39)"/>
+<circle cx="2.5" cy="93.1" r="0.19" fill="rgba(255,255,255,0.38)"/>
+<circle cx="16.4" cy="145.9" r="0.3" fill="rgba(255,255,255,0.34)"/>
+<circle cx="7.2" cy="374.7" r="0.41" fill="rgba(255,255,255,0.6)"/>
+<circle cx="4.8" cy="291.7" r="0.22" fill="rgba(255,255,255,0.45)"/>
+<circle cx="25.2" cy="256.0" r="0.37" fill="rgba(255,255,255,0.64)"/>
+<circle cx="21.6" cy="310.4" r="0.24" fill="rgba(255,255,255,0.22)"/>
+<circle cx="8.4" cy="107.1" r="0.23" fill="rgba(255,255,255,0.81)"/>
+<circle cx="22.4" cy="125.9" r="0.41" fill="rgba(255,255,255,0.46)"/>
+<circle cx="23.4" cy="183.5" r="0.26" fill="rgba(255,255,255,0.36)"/>
+<circle cx="14.5" cy="105.1" r="0.38" fill="rgba(255,255,255,0.78)"/>
+<circle cx="10.5" cy="87.7" r="0.55" fill="rgba(255,255,255,0.53)"/>
+<circle cx="2.8" cy="18.8" r="0.19" fill="rgba(255,255,255,0.61)"/>
+<circle cx="20.3" cy="168.9" r="0.18" fill="rgba(255,255,255,0.45)"/>
+<circle cx="25.4" cy="211.6" r="0.54" fill="rgba(255,255,255,0.76)"/>
+<circle cx="0.8" cy="288.3" r="0.42" fill="rgba(255,255,255,0.55)"/>
+<circle cx="7.2" cy="256.4" r="0.19" fill="rgba(255,255,255,0.48)"/>
+<circle cx="11.8" cy="381.5" r="0.5" fill="rgba(255,255,255,0.37)"/>
+<circle cx="13.0" cy="71.5" r="0.52" fill="rgba(255,255,255,0.77)"/>
+<circle cx="8.0" cy="255.6" r="0.39" fill="rgba(255,255,255,0.3)"/>
+<circle cx="19.6" cy="215.8" r="0.46" fill="rgba(255,255,255,0.54)"/>
+<circle cx="0.5" cy="129.7" r="0.16" fill="rgba(255,255,255,0.8)"/>
+<circle cx="22.5" cy="332.7" r="0.27" fill="rgba(255,255,255,0.24)"/>
+<circle cx="22.5" cy="378.8" r="0.18" fill="rgba(255,255,255,0.52)"/>
+<circle cx="2.2" cy="304.2" r="0.46" fill="rgba(255,255,255,0.28)"/>
+<circle cx="12.4" cy="219.9" r="0.26" fill="rgba(255,255,255,0.77)"/>
+<circle cx="11.1" cy="84.7" r="0.37" fill="rgba(255,255,255,0.67)"/>
+<circle cx="5.5" cy="124.7" r="0.55" fill="rgba(255,255,255,0.62)"/>
+<circle cx="11.5" cy="207.0" r="0.2" fill="rgba(255,255,255,0.35)"/>
+<circle cx="9.0" cy="235.3" r="0.24" fill="rgba(255,255,255,0.34)"/>
+<circle cx="2.3" cy="252.4" r="0.24" fill="rgba(255,255,255,0.79)"/>
+<circle cx="22.0" cy="28.3" r="0.25" fill="rgba(255,255,255,0.63)"/>
+<circle cx="5.9" cy="52.9" r="0.52" fill="rgba(255,255,255,0.57)"/>
+<circle cx="12.3" cy="313.8" r="0.47" fill="rgba(255,255,255,0.32)"/>
+<circle cx="2.9" cy="172.4" r="0.32" fill="rgba(255,255,255,0.5)"/>
+<circle cx="18.7" cy="269.3" r="0.54" fill="rgba(255,255,255,0.26)"/>
+<circle cx="10.6" cy="135.7" r="0.49" fill="rgba(255,255,255,0.36)"/>
+<circle cx="5.3" cy="179.4" r="0.32" fill="rgba(255,255,255,0.38)"/>
+<circle cx="6.7" cy="369.3" r="0.33" fill="rgba(255,255,255,0.76)"/>
+<circle cx="14.3" cy="20.2" r="0.55" fill="rgba(255,255,255,0.74)"/>
+<circle cx="24.7" cy="370.5" r="0.49" fill="rgba(255,255,255,0.31)"/>
+<circle cx="12.6" cy="85.5" r="0.31" fill="rgba(255,255,255,0.24)"/>
+<circle cx="10.0" cy="394.1" r="0.26" fill="rgba(255,255,255,0.71)"/>
+<circle cx="11.9" cy="169.2" r="0.53" fill="rgba(255,255,255,0.85)"/>
+<circle cx="14.4" cy="287.4" r="0.21" fill="rgba(255,255,255,0.39)"/>
+<circle cx="24.7" cy="231.7" r="0.37" fill="rgba(255,255,255,0.69)"/>
+<circle cx="1.9" cy="233.7" r="0.35" fill="rgba(255,255,255,0.75)"/>
+<circle cx="4.4" cy="384.3" r="0.18" fill="rgba(255,255,255,0.32)"/>
+<circle cx="15.4" cy="270.1" r="0.24" fill="rgba(255,255,255,0.28)"/>
+<circle cx="22.8" cy="98.5" r="0.39" fill="rgba(255,255,255,0.6)"/>
+<circle cx="11.0" cy="233.5" r="0.36" fill="rgba(255,255,255,0.81)"/>
+<circle cx="5.6" cy="286.5" r="0.25" fill="rgba(255,255,255,0.46)"/>
+<circle cx="17.3" cy="120.0" r="0.28" fill="rgba(255,255,255,0.69)"/>
+<circle cx="2.3" cy="183.3" r="0.55" fill="rgba(255,255,255,0.85)"/>
+<circle cx="2.3" cy="85.3" r="0.26" fill="rgba(255,255,255,0.81)"/>
+<circle cx="22.5" cy="351.7" r="0.3" fill="rgba(255,255,255,0.3)"/>
+<circle cx="21.3" cy="281.4" r="0.39" fill="rgba(255,255,255,0.84)"/>
+<circle cx="16.8" cy="3.1" r="0.48" fill="rgba(255,255,255,0.39)"/>
+<circle cx="17.1" cy="375.6" r="0.2" fill="rgba(255,255,255,0.28)"/>
+<circle cx="3.2" cy="221.3" r="0.26" fill="rgba(255,255,255,0.59)"/>
+<circle cx="18.4" cy="81.4" r="0.4" fill="rgba(255,255,255,0.37)"/>
+<circle cx="12.7" cy="362.1" r="0.49" fill="rgba(255,255,255,0.26)"/>
+<circle cx="11.1" cy="110.7" r="0.15" fill="rgba(255,255,255,0.7)"/>
+<circle cx="16.4" cy="104.8" r="0.45" fill="rgba(255,255,255,0.56)"/>
+<circle cx="11.2" cy="3.9" r="0.18" fill="rgba(255,255,255,0.77)"/>
+<circle cx="23.1" cy="218.2" r="0.48" fill="rgba(255,255,255,0.58)"/>
+<circle cx="4.2" cy="51.0" r="0.27" fill="rgba(255,255,255,0.78)"/>
+<circle cx="20.4" cy="344.3" r="0.51" fill="rgba(255,255,255,0.34)"/>
+<circle cx="6.7" cy="41.1" r="0.46" fill="rgba(255,255,255,0.77)"/>
+<circle cx="10.7" cy="248.3" r="0.21" fill="rgba(255,255,255,0.8)"/>
+<circle cx="22.1" cy="390.5" r="0.47" fill="rgba(255,255,255,0.77)"/>
+<circle cx="1.1" cy="294.6" r="0.28" fill="rgba(255,255,255,0.81)"/>
+<circle cx="20.6" cy="345.6" r="0.47" fill="rgba(255,255,255,0.37)"/>
+<circle cx="20.2" cy="43.2" r="0.5" fill="rgba(255,255,255,0.76)"/>
+<circle cx="6.1" cy="326.6" r="0.33" fill="rgba(255,255,255,0.4)"/>
+<circle cx="20.4" cy="91.0" r="0.16" fill="rgba(255,255,255,0.33)"/>
+<circle cx="8.7" cy="345.7" r="0.54" fill="rgba(255,255,255,0.38)"/>
+<circle cx="16.5" cy="159.9" r="0.54" fill="rgba(255,255,255,0.55)"/>
+<circle cx="24.0" cy="46.1" r="0.54" fill="rgba(255,255,255,0.32)"/>
+<circle cx="24.6" cy="106.2" r="0.19" fill="rgba(255,255,255,0.48)"/>
+<circle cx="18.7" cy="125.5" r="0.39" fill="rgba(255,255,255,0.53)"/>
+<circle cx="10.1" cy="230.6" r="0.25" fill="rgba(255,255,255,0.66)"/>
+<circle cx="0.5" cy="370.2" r="0.37" fill="rgba(255,255,255,0.67)"/>
+<circle cx="19.0" cy="268.3" r="0.3" fill="rgba(255,255,255,0.25)"/>
+<circle cx="17.1" cy="132.1" r="0.28" fill="rgba(255,255,255,0.75)"/>
+<circle cx="18.5" cy="120.1" r="0.27" fill="rgba(255,255,255,0.47)"/>
+<circle cx="10.6" cy="118.3" r="0.2" fill="rgba(255,255,255,0.47)"/>
+<circle cx="24.0" cy="270.9" r="0.51" fill="rgba(255,255,255,0.6)"/>
+<circle cx="8.0" cy="219.2" r="0.15" fill="rgba(255,255,255,0.39)"/>
+<circle cx="11.2" cy="232.0" r="0.41" fill="rgba(255,255,255,0.5)"/>
+<circle cx="11.6" cy="85.5" r="0.34" fill="rgba(255,255,255,0.79)"/>
+<circle cx="20.4" cy="67.9" r="0.18" fill="rgba(255,255,255,0.54)"/>
+<circle cx="16.3" cy="134.1" r="0.48" fill="rgba(255,255,255,0.69)"/>
+<circle cx="17.3" cy="89.9" r="0.23" fill="rgba(255,255,255,0.22)"/>
+<circle cx="6.6" cy="190.1" r="0.49" fill="rgba(255,255,255,0.25)"/>
+<circle cx="10.9" cy="251.9" r="0.23" fill="rgba(255,255,255,0.65)"/>
+<circle cx="12.9" cy="97.6" r="0.41" fill="rgba(255,255,255,0.2)"/>
+<circle cx="19.3" cy="308.0" r="0.19" fill="rgba(255,255,255,0.48)"/>
+<circle cx="4.9" cy="383.2" r="0.36" fill="rgba(255,255,255,0.23)"/>
+<circle cx="6.7" cy="339.3" r="0.33" fill="rgba(255,255,255,0.72)"/>
+<circle cx="17.2" cy="395.2" r="0.39" fill="rgba(255,255,255,0.82)"/>
+<circle cx="22.8" cy="245.1" r="0.44" fill="rgba(255,255,255,0.53)"/>
+<circle cx="21.3" cy="219.1" r="0.51" fill="rgba(255,255,255,0.68)"/>
+<circle cx="12.4" cy="103.7" r="0.25" fill="rgba(255,255,255,0.61)"/>
+<circle cx="19.6" cy="208.5" r="0.4" fill="rgba(255,255,255,0.38)"/>
+<circle cx="2.4" cy="114.3" r="0.26" fill="rgba(255,255,255,0.41)"/>
+<circle cx="14.0" cy="55.3" r="0.24" fill="rgba(255,255,255,0.65)"/>
+<circle cx="18.2" cy="25.7" r="0.31" fill="rgba(255,255,255,0.55)"/>
+<circle cx="10.9" cy="82.7" r="0.32" fill="rgba(255,255,255,0.79)"/>
+<circle cx="15.1" cy="278.2" r="0.49" fill="rgba(255,255,255,0.7)"/>
+<circle cx="10.0" cy="2.4" r="0.29" fill="rgba(255,255,255,0.69)"/>
+<circle cx="21.8" cy="381.4" r="0.32" fill="rgba(255,255,255,0.69)"/>
+<circle cx="14.2" cy="241.3" r="0.24" fill="rgba(255,255,255,0.34)"/>
+<circle cx="11.4" cy="11.6" r="0.28" fill="rgba(255,255,255,0.64)"/>
+<circle cx="10.6" cy="66.0" r="0.34" fill="rgba(255,255,255,0.28)"/>
+<circle cx="16.1" cy="10.8" r="0.31" fill="rgba(255,255,255,0.57)"/>
+<circle cx="1.2" cy="257.1" r="0.2" fill="rgba(255,255,255,0.5)"/>
+<circle cx="1.8" cy="151.6" r="0.23" fill="rgba(255,255,255,0.41)"/>
+<circle cx="19.5" cy="151.7" r="0.45" fill="rgba(255,255,255,0.74)"/>
+<circle cx="6.8" cy="32.8" r="0.16" fill="rgba(255,255,255,0.55)"/>
+<circle cx="25.5" cy="140.0" r="0.41" fill="rgba(255,255,255,0.71)"/>
+<circle cx="16.8" cy="301.7" r="0.53" fill="rgba(255,255,255,0.33)"/>
+<circle cx="1.0" cy="61.0" r="0.2" fill="rgba(255,255,255,0.64)"/>
+<circle cx="14.6" cy="87.2" r="0.43" fill="rgba(255,255,255,0.7)"/>
+<circle cx="4.7" cy="242.9" r="0.45" fill="rgba(255,255,255,0.27)"/>
+<circle cx="21.0" cy="385.9" r="0.19" fill="rgba(255,255,255,0.22)"/>
+<circle cx="8.3" cy="270.9" r="0.53" fill="rgba(255,255,255,0.46)"/>
+<circle cx="18.4" cy="30.4" r="0.43" fill="rgba(255,255,255,0.61)"/>
+<circle cx="3.0" cy="309.0" r="0.49" fill="rgba(255,255,255,0.59)"/>
+<circle cx="3.5" cy="393.5" r="0.46" fill="rgba(255,255,255,0.43)"/>
+<circle cx="11.2" cy="148.2" r="0.35" fill="rgba(255,255,255,0.42)"/>
+<circle cx="21.7" cy="328.9" r="0.19" fill="rgba(255,255,255,0.82)"/>
+<circle cx="16.4" cy="331.5" r="0.43" fill="rgba(255,255,255,0.48)"/>
+<circle cx="18.8" cy="386.2" r="0.26" fill="rgba(255,255,255,0.73)"/>
+<circle cx="14.0" cy="193.4" r="0.32" fill="rgba(255,255,255,0.68)"/>
+<circle cx="7.2" cy="340.7" r="0.48" fill="rgba(255,255,255,0.26)"/>
+<circle cx="22.5" cy="97.5" r="0.34" fill="rgba(255,255,255,0.6)"/>
+<circle cx="10.0" cy="11.5" r="0.49" fill="rgba(255,255,255,0.32)"/>
+<circle cx="5.8" cy="319.1" r="0.29" fill="rgba(255,255,255,0.77)"/>
+<circle cx="18.0" cy="110.5" r="0.15" fill="rgba(255,255,255,0.82)"/>
+<circle cx="2.6" cy="288.0" r="0.35" fill="rgba(255,255,255,0.69)"/>
+<circle cx="17.8" cy="258.4" r="0.35" fill="rgba(255,255,255,0.72)"/>
+<circle cx="2.8" cy="88.6" r="0.43" fill="rgba(255,255,255,0.4)"/>
+<circle cx="15.0" cy="189.3" r="0.36" fill="rgba(255,255,255,0.48)"/>
+<circle cx="19.1" cy="132.3" r="0.43" fill="rgba(255,255,255,0.38)"/>
+<circle cx="6.8" cy="48.3" r="0.23" fill="rgba(255,255,255,0.28)"/>
+<circle cx="13.9" cy="304.9" r="0.22" fill="rgba(255,255,255,0.34)"/>
+<circle cx="12.6" cy="289.8" r="0.54" fill="rgba(255,255,255,0.54)"/>
+<circle cx="7.6" cy="40.2" r="0.23" fill="rgba(255,255,255,0.35)"/>
+<circle cx="5.0" cy="5.7" r="0.36" fill="rgba(255,255,255,0.38)"/>
+<circle cx="24.9" cy="221.3" r="0.43" fill="rgba(255,255,255,0.28)"/>
+<circle cx="22.2" cy="196.4" r="0.5" fill="rgba(255,255,255,0.57)"/>
+<circle cx="12.2" cy="176.2" r="0.22" fill="rgba(255,255,255,0.23)"/>
+<circle cx="24.0" cy="191.1" r="0.48" fill="rgba(255,255,255,0.46)"/>
+<circle cx="2.4" cy="251.8" r="0.17" fill="rgba(255,255,255,0.3)"/>
+<circle cx="14.6" cy="121.5" r="0.55" fill="rgba(255,255,255,0.28)"/>
+<circle cx="19.6" cy="242.5" r="0.47" fill="rgba(255,255,255,0.35)"/>
+<circle cx="13.6" cy="180.2" r="0.33" fill="rgba(255,255,255,0.76)"/>
+<circle cx="25.3" cy="122.2" r="0.4" fill="rgba(255,255,255,0.6)"/>
+<circle cx="19.0" cy="379.0" r="0.23" fill="rgba(255,255,255,0.34)"/>
+<circle cx="17.0" cy="62.8" r="0.22" fill="rgba(255,255,255,0.25)"/>
+<circle cx="0.6" cy="180.2" r="0.39" fill="rgba(255,255,255,0.39)"/>
+<circle cx="6.3" cy="282.8" r="0.43" fill="rgba(255,255,255,0.5)"/>
+<circle cx="17.7" cy="369.6" r="0.47" fill="rgba(255,255,255,0.61)"/>
+<circle cx="17.0" cy="373.5" r="0.32" fill="rgba(255,255,255,0.55)"/>
+<circle cx="16.7" cy="363.4" r="0.48" fill="rgba(255,255,255,0.25)"/>
+<circle cx="4.6" cy="123.0" r="0.45" fill="rgba(255,255,255,0.57)"/>
+<circle cx="7.7" cy="49.7" r="0.43" fill="rgba(255,255,255,0.65)"/>
+<circle cx="24.1" cy="200.2" r="0.35" fill="rgba(255,255,255,0.25)"/>
+<circle cx="1.5" cy="172.8" r="0.28" fill="rgba(255,255,255,0.36)"/>
+<circle cx="2.8" cy="384.8" r="0.48" fill="rgba(255,255,255,0.57)"/>
+<circle cx="24.3" cy="399.8" r="0.42" fill="rgba(255,255,255,0.38)"/>
+<circle cx="1.5" cy="302.5" r="0.34" fill="rgba(255,255,255,0.62)"/>
+<circle cx="23.4" cy="72.6" r="0.38" fill="rgba(255,255,255,0.61)"/>
+<circle cx="12.8" cy="36.5" r="0.29" fill="rgba(255,255,255,0.42)"/>
+<circle cx="17.3" cy="343.1" r="0.28" fill="rgba(255,255,255,0.65)"/>
+<circle cx="7.7" cy="378.1" r="0.48" fill="rgba(255,255,255,0.56)"/>
+<circle cx="11.9" cy="125.8" r="0.28" fill="rgba(255,255,255,0.83)"/>
+<circle cx="10.6" cy="205.8" r="0.55" fill="rgba(255,255,255,0.63)"/>
+<circle cx="14.1" cy="165.3" r="0.23" fill="rgba(255,255,255,0.44)"/>
+<circle cx="19.4" cy="250.2" r="0.45" fill="rgba(255,255,255,0.33)"/>
+<circle cx="14.2" cy="371.1" r="0.33" fill="rgba(255,255,255,0.65)"/>
+<circle cx="3.5" cy="389.3" r="0.39" fill="rgba(255,255,255,0.36)"/>
+<circle cx="4.5" cy="220.3" r="0.37" fill="rgba(255,255,255,0.26)"/>
+<circle cx="25.3" cy="365.2" r="0.33" fill="rgba(255,255,255,0.28)"/>
+<circle cx="21.3" cy="199.4" r="0.44" fill="rgba(255,255,255,0.53)"/>
+<circle cx="7.3" cy="333.9" r="0.54" fill="rgba(255,255,255,0.36)"/>
+<circle cx="14.3" cy="153.4" r="0.52" fill="rgba(255,255,255,0.53)"/>
+<circle cx="22.5" cy="345.6" r="0.26" fill="rgba(255,255,255,0.71)"/>
+<circle cx="10.9" cy="373.7" r="0.35" fill="rgba(255,255,255,0.73)"/>
+<circle cx="7.6" cy="119.4" r="0.38" fill="rgba(255,255,255,0.85)"/>
+<circle cx="12.7" cy="59.4" r="0.37" fill="rgba(255,255,255,0.42)"/>
+<circle cx="14.3" cy="217.4" r="0.33" fill="rgba(255,255,255,0.41)"/>
+<circle cx="5.2" cy="279.0" r="0.38" fill="rgba(255,255,255,0.35)"/>
+<circle cx="19.9" cy="17.5" r="0.45" fill="rgba(255,255,255,0.66)"/>
+<circle cx="20.8" cy="154.4" r="0.42" fill="rgba(255,255,255,0.73)"/>
+<circle cx="25.0" cy="198.1" r="0.16" fill="rgba(255,255,255,0.53)"/>
+<circle cx="15.3" cy="347.9" r="0.5" fill="rgba(255,255,255,0.49)"/>
+<circle cx="13.6" cy="182.8" r="0.44" fill="rgba(255,255,255,0.47)"/>
+<circle cx="16.9" cy="61.7" r="0.34" fill="rgba(255,255,255,0.83)"/>
+<circle cx="9.0" cy="277.1" r="0.41" fill="rgba(255,255,255,0.75)"/>
+<circle cx="21.8" cy="343.7" r="0.3" fill="rgba(255,255,255,0.41)"/>
+<circle cx="18.5" cy="303.8" r="0.5" fill="rgba(255,255,255,0.22)"/>
+<circle cx="2.2" cy="252.5" r="0.52" fill="rgba(255,255,255,0.85)"/>
+<circle cx="19.2" cy="173.6" r="0.19" fill="rgba(255,255,255,0.61)"/>
+<circle cx="22.3" cy="177.5" r="0.43" fill="rgba(255,255,255,0.79)"/>
+<circle cx="1.6" cy="318.5" r="0.27" fill="rgba(255,255,255,0.44)"/>
+<circle cx="4.1" cy="212.5" r="0.38" fill="rgba(255,255,255,0.72)"/>
+<circle cx="4.7" cy="31.6" r="0.5" fill="rgba(255,255,255,0.6)"/>
+<circle cx="6.5" cy="365.1" r="0.21" fill="rgba(255,255,255,0.5)"/>
+<circle cx="18.3" cy="61.8" r="0.7" fill="rgba(255,255,240,0.9)"/>
+<circle cx="18.3" cy="61.8" r="1.4" fill="rgba(200,200,255,0.12)"/>
+<circle cx="11.1" cy="39.6" r="0.7" fill="rgba(255,255,240,0.9)"/>
+<circle cx="11.1" cy="39.6" r="1.4" fill="rgba(200,200,255,0.12)"/>
+<circle cx="12.8" cy="163.2" r="0.7" fill="rgba(255,255,240,0.9)"/>
+<circle cx="12.8" cy="163.2" r="1.4" fill="rgba(200,200,255,0.12)"/>
+<circle cx="22.9" cy="13.1" r="0.7" fill="rgba(255,255,240,0.9)"/>
+<circle cx="22.9" cy="13.1" r="1.4" fill="rgba(200,200,255,0.12)"/>
+<circle cx="10.2" cy="177.4" r="0.7" fill="rgba(255,255,240,0.9)"/>
+<circle cx="10.2" cy="177.4" r="1.4" fill="rgba(200,200,255,0.12)"/>
+<circle cx="22.9" cy="342.2" r="0.7" fill="rgba(255,255,240,0.9)"/>
+<circle cx="22.9" cy="342.2" r="1.4" fill="rgba(200,200,255,0.12)"/>
+<circle cx="4.2" cy="274.3" r="0.7" fill="rgba(255,255,240,0.9)"/>
+<circle cx="4.2" cy="274.3" r="1.4" fill="rgba(200,200,255,0.12)"/>
+<circle cx="14.0" cy="391.1" r="0.7" fill="rgba(255,255,240,0.9)"/>
+<circle cx="14.0" cy="391.1" r="1.4" fill="rgba(200,200,255,0.12)"/>
+<circle cx="9.9" cy="159.3" r="0.7" fill="rgba(255,255,240,0.9)"/>
+<circle cx="9.9" cy="159.3" r="1.4" fill="rgba(200,200,255,0.12)"/>
+<circle cx="6.2" cy="48.9" r="0.7" fill="rgba(255,255,240,0.9)"/>
+<circle cx="6.2" cy="48.9" r="1.4" fill="rgba(200,200,255,0.12)"/>
+<circle cx="20.7" cy="181.9" r="0.7" fill="rgba(255,255,240,0.9)"/>
+<circle cx="20.7" cy="181.9" r="1.4" fill="rgba(200,200,255,0.12)"/>
+<circle cx="16.6" cy="256.7" r="0.7" fill="rgba(255,255,240,0.9)"/>
+<circle cx="16.6" cy="256.7" r="1.4" fill="rgba(200,200,255,0.12)"/>
+
+    <path d="M 0 2 C 26 2, 26 200, 26 200 C 26 200, 26 398, 0 398" fill="none" stroke="rgba(140,120,255,0.1)" stroke-width="0.3"/>
+  `;
+
+  bridge.appendChild(ns);
+  return bridge;
+}
+
+// ── MODAL ──
+function openAddModal(di, h, night) {
+  modalMode = 'add';
+  modalDayIdx = di;
+  modalHour = h;
+  modalIsNight = night;
+  document.getElementById('modal-title').textContent = `Nouvelle tâche — ${DATA[di].name} ${h}h`;
+  document.getElementById('m-title').value = '';
+  document.getElementById('m-cat').value = night ? 'nuit' : 'perso';
+  document.getElementById('m-hour').value = h;
+  document.getElementById('m-subs-list').innerHTML = '';
+  document.getElementById('modal-btns').innerHTML = `
+    <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Annuler</button>
+    <button class="modal-btn modal-btn-save" onclick="saveTask()">Enregistrer</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('m-title').focus(), 100);
+}
+
+function openEditModal(di, taskIdx) {
+  const list = isNight ? DATA[di].nightTasks : DATA[di].tasks;
+  const task = list[taskIdx];
+  modalMode = 'edit';
+  modalDayIdx = di;
+  modalTaskIdx = taskIdx;
+  modalIsNight = isNight;
+  document.getElementById('modal-title').textContent = `Modifier la tâche`;
+  document.getElementById('m-title').value = task.title;
+  document.getElementById('m-cat').value = task.cat;
+  document.getElementById('m-hour').value = task.h;
+  const subsList = document.getElementById('m-subs-list');
+  subsList.innerHTML = '';
+  (task.subs || []).forEach(s => addSubField(s));
+  document.getElementById('modal-btns').innerHTML = `
+    <button class="modal-btn modal-btn-delete" onclick="deleteTask()">Supprimer</button>
+    <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Annuler</button>
+    <button class="modal-btn modal-btn-save" onclick="saveTask()">Enregistrer</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function addSubField(val) {
+  const list = document.getElementById('m-subs-list');
+  const row = document.createElement('div');
+  row.className = 'modal-sub-row';
+  row.innerHTML = `<input class="modal-sub-input" type="text" placeholder="Sous-tâche..." value="${val||''}">
+    <button class="modal-sub-del" onclick="this.parentElement.remove()">×</button>`;
+  list.appendChild(row);
+  if (!val) row.querySelector('input').focus();
+}
+
+function saveTask() {
+  const title = document.getElementById('m-title').value.trim();
+  if (!title) { document.getElementById('m-title').style.borderColor='var(--urgent-border)'; return; }
+  const cat = document.getElementById('m-cat').value;
+  const h = parseInt(document.getElementById('m-hour').value) || (modalIsNight ? 20 : 9);
+  const subs = Array.from(document.querySelectorAll('.modal-sub-input')).map(i=>i.value.trim()).filter(Boolean);
+  const done = subs.map(() => false);
+  const list = modalIsNight ? DATA[modalDayIdx].nightTasks : DATA[modalDayIdx].tasks;
+  if (modalMode === 'add') {
+    list.push({h, cat, title, subs, done});
+    list.sort((a,b) => a.h - b.h);
+  } else {
+    list[modalTaskIdx] = {h, cat, title, subs, done};
+    list.sort((a,b) => a.h - b.h);
+  }
+  save();
+  closeModal();
+  render();
+}
+
+function deleteTask() {
+  const list = modalIsNight ? DATA[modalDayIdx].nightTasks : DATA[modalDayIdx].tasks;
+  list.splice(modalTaskIdx, 1);
+  save();
+  closeModal();
+  render();
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+// ── TRANSFER ──
+let transferTask = null, transferDi = null, transferIdx = null;
+function openTransfer(task, di, idx) {
+  transferTask = task; transferDi = di; transferIdx = idx;
+  document.getElementById('transfer-title').textContent = `Transférer "${task.title}" vers…`;
+  document.getElementById('transfer-panel').classList.add('open');
+}
+function closeTransfer() {
+  document.getElementById('transfer-panel').classList.remove('open');
+}
+function doTransfer(dest) {
+  closeTransfer();
+  const destLabels = {admin:'Équipe Administrative', commer:'Équipe Commerciale', notion:'Notion', gcal:'Google Calendar'};
+  showToast(`"${transferTask.title}" transféré vers ${destLabels[dest]}`);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── WEEK NAV ──
+function prevWeek() { if(weekIdx>0){weekIdx--;render();} }
+function nextWeek() { if(weekIdx<ALL_WEEKS.length-1){weekIdx++;render();} }
+
+// ── FLIP ──
+function flipWeek() { isNight = !isNight; render(); }
+
+// ── KEYBOARD ──
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModal(); closeTransfer(); }
+  if (e.key === 'Enter' && document.getElementById('modal-overlay').classList.contains('open')) saveTask();
+});
+
+render();
+
+// PWA Manifest injection
+const manifest = {
+  name: "Agenda Cylindrique",
+  short_name: "Agenda",
+  start_url: "/",
+  display: "standalone",
+  background_color: "#f0f7ff",
+  theme_color: "#f0f7ff",
+  orientation: "portrait-primary",
+  icons: [{
+    src: "data:image/svg+xml," + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f0f13'/><circle cx='50' cy='50' r='28' fill='none' stroke='%236c63ff' stroke-width='5'/><line x1='50' y1='22' x2='50' y2='50' stroke='%236c63ff' stroke-width='5' stroke-linecap='round'/><line x1='50' y1='50' x2='66' y2='61' stroke='%23e8a430' stroke-width='5' stroke-linecap='round'/><circle cx='50' cy='50' r='4' fill='%236c63ff'/></svg>`),
+    sizes: "any",
+    type: "image/svg+xml"
+  }]
+};
+const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+const url = URL.createObjectURL(blob);
+document.getElementById('pwa-manifest').setAttribute('href', url);
+
+let _pendingSubDrop = null;
+
+function subConfirmOk() {
+  if (!_pendingSubDrop) return;
+  const {fromDi, fromIdx, subIdx, subText, toDi, toTaskIdx, isNight} = _pendingSubDrop;
+  const fromList = isNight ? DATA[fromDi].nightTasks : DATA[fromDi].tasks;
+  const fromTask = fromList[fromIdx];
+  if (!fromTask.done) fromTask.done = {};
+  fromTask.done[subIdx] = true;
+  const toList = DATA[toDi].tasks;
+  const toTask = toList[toTaskIdx];
+  if (!toTask.subs) toTask.subs = [];
+  toTask.subs.push(subText);
+  _pendingSubDrop = null;
+  document.getElementById('sub-confirm-modal').classList.remove('show');
+  save(); render();
+}
+
+function subConfirmCancel() {
+  _pendingSubDrop = null;
+  document.getElementById('sub-confirm-modal').classList.remove('show');
+}
+
+
+
+function applyCylinderEffect() {
+  const cols = document.querySelectorAll('.day-col');
+  const total = cols.length;
+  const arcDeg = 22;
+  cols.forEach((col, i) => {
+    const fraction = total > 1 ? (i / (total - 1)) : 0.5;
+    const deg = (fraction - 0.5) * arcDeg;
+    const scale = 1 - Math.abs(fraction - 0.5) * 0.035;
+    col.style.transform = `perspective(900px) rotateY(${deg}deg) scale(${scale})`;
+    col.style.transformOrigin = '50% 50%';
+  });
+}
+
+// ── SPI FUNCTIONS ──
 function getSpiSvg(name) {
-  const svgs = {
+  const s = {
     Imbolc: '<svg viewBox="0 0 24 24" width="26" height="26"><circle cx="12" cy="12" r="3.5" fill="#90ee90"/><line x1="12" y1="2" x2="12" y2="6" stroke="#90ee90" stroke-width="1.8" stroke-linecap="round"/><line x1="12" y1="18" x2="12" y2="22" stroke="#90ee90" stroke-width="1.8" stroke-linecap="round"/><line x1="2" y1="12" x2="6" y2="12" stroke="#90ee90" stroke-width="1.8" stroke-linecap="round"/><line x1="18" y1="12" x2="22" y2="12" stroke="#90ee90" stroke-width="1.8" stroke-linecap="round"/><line x1="4.9" y1="4.9" x2="7.8" y2="7.8" stroke="#90ee90" stroke-width="1.4" stroke-linecap="round"/><line x1="16.2" y1="16.2" x2="19.1" y2="19.1" stroke="#90ee90" stroke-width="1.4" stroke-linecap="round"/><line x1="19.1" y1="4.9" x2="16.2" y2="7.8" stroke="#90ee90" stroke-width="1.4" stroke-linecap="round"/><line x1="7.8" y1="16.2" x2="4.9" y2="19.1" stroke="#90ee90" stroke-width="1.4" stroke-linecap="round"/></svg>',
     Ostara: '<svg viewBox="0 0 24 24" width="26" height="26"><ellipse cx="12" cy="14" rx="5" ry="8" fill="none" stroke="#ffb6c1" stroke-width="1.5"/><ellipse cx="12" cy="14" rx="8" ry="5" fill="none" stroke="#ffb6c1" stroke-width="1.5"/><circle cx="12" cy="11" r="2.5" fill="#ffb6c1" opacity="0.7"/><line x1="12" y1="2" x2="12" y2="5" stroke="#ffb6c1" stroke-width="1.8" stroke-linecap="round"/></svg>',
-    Beltane: '<svg viewBox="0 0 24 24" width="26" height="26"><polygon points="12,2 14,9 21,9 16,13 18,20 12,16 6,20 8,13 3,9 10,9" fill="none" stroke="#ff8c00" stroke-width="1.4"/><circle cx="12" cy="11" r="2.5" fill="#ff8c00" opacity="0.6"/></svg>',
+    Beltane: '<svg viewBox="0 0 24 24" width="26" height="26"><polygon points="12,2 14.5,9 21,9 15.5,13 18,20 12,16 6,20 8.5,13 3,9 9.5,9" fill="none" stroke="#ff8c00" stroke-width="1.4"/><circle cx="12" cy="11" r="2.5" fill="#ff8c00" opacity="0.6"/></svg>',
     Litha: '<svg viewBox="0 0 24 24" width="26" height="26"><circle cx="12" cy="12" r="5" fill="#ffd700"/><line x1="12" y1="1" x2="12" y2="5" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="19" x2="12" y2="23" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/><line x1="1" y1="12" x2="5" y2="12" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/><line x1="19" y1="12" x2="23" y2="12" stroke="#ffd700" stroke-width="2" stroke-linecap="round"/><line x1="4.2" y1="4.2" x2="7" y2="7" stroke="#ffd700" stroke-width="1.6" stroke-linecap="round"/><line x1="17" y1="17" x2="19.8" y2="19.8" stroke="#ffd700" stroke-width="1.6" stroke-linecap="round"/><line x1="19.8" y1="4.2" x2="17" y2="7" stroke="#ffd700" stroke-width="1.6" stroke-linecap="round"/><line x1="7" y1="17" x2="4.2" y2="19.8" stroke="#ffd700" stroke-width="1.6" stroke-linecap="round"/></svg>',
-    Lughnasadh: '<svg viewBox="0 0 24 24" width="26" height="26"><path d="M5 19 Q12 3 19 19 Z" fill="none" stroke="#daa520" stroke-width="1.6"/><line x1="12" y1="5" x2="12" y2="19" stroke="#daa520" stroke-width="1.2"/><ellipse cx="12" cy="20" rx="7" ry="2.5" fill="none" stroke="#daa520" stroke-width="1.2"/><line x1="8" y1="12" x2="16" y2="12" stroke="#daa520" stroke-width="1"/></svg>',
-    Mabon: '<svg viewBox="0 0 24 24" width="26" height="26"><path d="M12 3 Q17 9 17 15 Q17 20 12 21 Q7 20 7 15 Q7 9 12 3Z" fill="none" stroke="#cd853f" stroke-width="1.6"/><path d="M12 3 Q9 8 10 15" fill="none" stroke="#cd853f" stroke-width="1.1"/><path d="M12 3 Q15 8 14 15" fill="none" stroke="#cd853f" stroke-width="1.1"/><line x1="8" y1="9" x2="16" y2="9" stroke="#cd853f" stroke-width="0.9"/></svg>',
+    Lughnasadh: '<svg viewBox="0 0 24 24" width="26" height="26"><path d="M5 19 Q12 3 19 19 Z" fill="none" stroke="#daa520" stroke-width="1.6"/><line x1="12" y1="5" x2="12" y2="19" stroke="#daa520" stroke-width="1.2"/><ellipse cx="12" cy="20" rx="7" ry="2.5" fill="none" stroke="#daa520" stroke-width="1.2"/></svg>',
+    Mabon: '<svg viewBox="0 0 24 24" width="26" height="26"><path d="M12 3 Q17 9 17 15 Q17 20 12 21 Q7 20 7 15 Q7 9 12 3Z" fill="none" stroke="#cd853f" stroke-width="1.6"/><path d="M12 3 Q9 8 10 15" fill="none" stroke="#cd853f" stroke-width="1.1"/><path d="M12 3 Q15 8 14 15" fill="none" stroke="#cd853f" stroke-width="1.1"/></svg>',
     Samhain: '<svg viewBox="0 0 24 24" width="26" height="26"><path d="M12 2 L14.5 9 L21 9 L15.5 13 L18 20 L12 16 L6 20 L8.5 13 L3 9 L9.5 9 Z" fill="none" stroke="#9370db" stroke-width="1.4"/><circle cx="12" cy="11" r="2" fill="#9370db" opacity="0.5"/></svg>',
-    Yule: '<svg viewBox="0 0 24 24" width="26" height="26"><polygon points="12,2 17,16 7,16" fill="none" stroke="#87ceeb" stroke-width="1.5"/><line x1="12" y1="16" x2="12" y2="21" stroke="#87ceeb" stroke-width="2.2" stroke-linecap="round"/><line x1="8" y1="21" x2="16" y2="21" stroke="#87ceeb" stroke-width="1.8" stroke-linecap="round"/><circle cx="9" cy="9" r="1.2" fill="#87ceeb" opacity="0.8"/><circle cx="15" cy="11" r="1.2" fill="#87ceeb" opacity="0.8"/><circle cx="12" cy="7" r="1" fill="#87ceeb" opacity="0.6"/></svg>'
+    Yule: '<svg viewBox="0 0 24 24" width="26" height="26"><polygon points="12,2 17,16 7,16" fill="none" stroke="#87ceeb" stroke-width="1.5"/><line x1="12" y1="16" x2="12" y2="21" stroke="#87ceeb" stroke-width="2.2" stroke-linecap="round"/><line x1="8" y1="21" x2="16" y2="21" stroke="#87ceeb" stroke-width="1.8" stroke-linecap="round"/><circle cx="9" cy="9" r="1.2" fill="#87ceeb" opacity="0.8"/><circle cx="15" cy="11" r="1.2" fill="#87ceeb" opacity="0.8"/></svg>'
   };
-  return svgs[name] || '✨';
+  return s[name] || '';
 }
 
 function getMoonSvg(type) {
-  if (type === 'full') return '<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="9" fill="#fffde7" stroke="#e0c000" stroke-width="1.2"/></svg>';
-  if (type === 'new') return '<svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="9" fill="#1a1a2e" stroke="#555" stroke-width="1.2"/><circle cx="12" cy="12" r="9" fill="none" stroke="#333" stroke-width="1"/></svg>';
-  return '🌙';
+  if (type === 'full') return '<svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="9" fill="#fffde7" stroke="#e0c000" stroke-width="1.2"/></svg>';
+  return '<svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="9" fill="#1a1a2e" stroke="#555" stroke-width="1.2"/></svg>';
 }
 
+function getSpiVisual(mmdd) {
+  if (!mmdd) return null;
+  for (const ev of PAGAN_EVENTS) {
+    const d1 = new Date('2026-' + ev.date), d2 = new Date('2026-' + mmdd);
+    const diff = Math.floor((d2 - d1) / 86400000);
+    if (diff >= 0 && diff < ev.duration) return {name: ev.name, svg: getSpiSvg(ev.name)};
+  }
+  for (const m of MOON_PHASES) {
+    if (m.date === mmdd) return {name: m.type==='full'?'Pleine lune':'Nouvelle lune', svg: getMoonSvg(m.type)};
+  }
+  return null;
+}
 
 function toggleSpi() {
   spiActive = !spiActive;
@@ -799,73 +1633,48 @@ function toggleMonthView() {
 }
 
 function renderMonthView() {
-  const container = document.getElementById('month-view');
-  container.innerHTML = '';
-  const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-  const dayNames = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
-  const todayStr = new Date().toISOString().slice(5,10);
-
-  monthNames.forEach((mName, mIdx) => {
-    const title = document.createElement('div');
-    title.className = 'month-title';
-    title.textContent = mName + ' 2026';
-    container.appendChild(title);
-
-    const grid = document.createElement('div');
-    grid.className = 'month-grid';
-    dayNames.forEach(d => {
-      const h = document.createElement('div');
-      h.className = 'month-day-header'; h.textContent = d; grid.appendChild(h);
-    });
-
-    const firstDay = new Date(2026, mIdx, 1);
-    let dow = firstDay.getDay(); dow = dow===0?6:dow-1;
-    for (let i=0;i<dow;i++) { const e=document.createElement('div'); e.className='month-cell other-month'; grid.appendChild(e); }
-
-    const daysInMonth = new Date(2026, mIdx+1, 0).getDate();
-    for (let day=1; day<=daysInMonth; day++) {
-      const mmdd = String(mIdx+1).padStart(2,'0') + '-' + String(day).padStart(2,'0');
-      const cell = document.createElement('div');
-      cell.className = 'month-cell' + (mmdd === todayStr ? ' today' : '');
-      const dl = document.createElement('div'); dl.className='cell-day'; dl.textContent=day;
-      cell.appendChild(dl);
-      if (spiActive) {
-        const sp = getSpiForDate(mmdd);
-        if (sp.length) {
-          const b=document.createElement('div'); b.className='cell-spi';
-          b.textContent=sp.map(s=>s.symbol).join(''); b.title=sp.map(s=>s.name||s.type).join(', ');
-          cell.appendChild(b);
-        }
-      }
-      cell.onclick = () => {
-        monthViewActive = false;
+  const c = document.getElementById('month-view');
+  c.innerHTML = '';
+  const mNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const dNames = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  const todayMmdd = (new Date()).toISOString().slice(5,10);
+  mNames.forEach((mn, mi) => {
+    const t = document.createElement('div'); t.className='month-title'; t.textContent=mn+' 2026'; c.appendChild(t);
+    const g = document.createElement('div'); g.className='month-grid';
+    dNames.forEach(d=>{const h=document.createElement('div');h.className='month-day-header';h.textContent=d;g.appendChild(h);});
+    let dow = new Date(2026,mi,1).getDay(); dow=dow===0?6:dow-1;
+    for(let i=0;i<dow;i++){const e=document.createElement('div');e.className='month-cell other-month';g.appendChild(e);}
+    const dim = new Date(2026,mi+1,0).getDate();
+    for(let day=1;day<=dim;day++){
+      const mmdd=String(mi+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+      const cell=document.createElement('div');
+      cell.className='month-cell'+(mmdd===todayMmdd?' today':'');
+      const dl=document.createElement('div');dl.className='cell-day';dl.textContent=day;cell.appendChild(dl);
+      if(spiActive){const sv=getSpiVisual(mmdd);if(sv){const b=document.createElement('div');b.className='cell-spi';b.innerHTML=sv.svg;b.title=sv.name;cell.appendChild(b);}}
+      cell.onclick=()=>{
+        monthViewActive=false;
         document.getElementById('month-btn').classList.remove('active');
-        document.getElementById('hscroll').style.display = '';
-        document.getElementById('month-view').style.display = 'none';
-        const wd = new Date('2026-' + mmdd);
-        const offset = (wd.getDay()+6)%7;
-        const mon = new Date(wd); mon.setDate(wd.getDate()-offset);
-        const monMmdd = String(mon.getMonth()+1).padStart(2,'0')+'-'+String(mon.getDate()).padStart(2,'0');
-        const wi = ALL_WEEKS.findIndex(w => w.dates[0] === monMmdd);
-        if (wi >= 0) { weekIdx = wi; render(); }
+        document.getElementById('hscroll').style.display='';
+        document.getElementById('month-view').style.display='none';
+        const wd=new Date('2026-'+mmdd), off=(wd.getDay()+6)%7;
+        const mon=new Date(wd); mon.setDate(wd.getDate()-off);
+        const monMmdd=String(mon.getMonth()+1).padStart(2,'0')+'-'+String(mon.getDate()).padStart(2,'0');
+        const wi=ALL_WEEKS.findIndex(w=>w.dates[0]===monMmdd);
+        if(wi>=0){weekIdx=wi;render();}
       };
-      grid.appendChild(cell);
+      g.appendChild(cell);
     }
-    container.appendChild(grid);
+    c.appendChild(g);
   });
 }
 
-// ── Cylinder effect ──
 function applyCylinderEffect() {
   const cols = document.querySelectorAll('#cols-wrap .day-col');
-  const total = cols.length;
-  if (!total) return;
-  cols.forEach((col, i) => {
-    const f = total > 1 ? i/(total-1) : 0.5;
-    const deg = (f - 0.5) * 20;
-    const scale = 1 - Math.abs(f - 0.5) * 0.03;
-    col.style.transform = `perspective(1000px) rotateY(${deg}deg) scale(${scale})`;
-    col.style.zIndex = String(Math.round(10 - Math.abs(f-0.5)*10));
+  const n = cols.length; if(!n) return;
+  cols.forEach((col,i)=>{
+    const f=n>1?i/(n-1):0.5, deg=(f-0.5)*20, sc=1-Math.abs(f-0.5)*0.03;
+    col.style.transform='perspective(1000px) rotateY('+deg+'deg) scale('+sc+')';
+    col.style.zIndex=String(Math.round(10-Math.abs(f-0.5)*10));
   });
 }
 
