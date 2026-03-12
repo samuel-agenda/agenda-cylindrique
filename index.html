@@ -3,41 +3,46 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#f0f7ff">
+<link rel="manifest" id="pwa-manifest">
 <title>Agenda Cylindrique</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap');
 
   :root {
-    --bg: #0f0f13;
-    --bg2: #16161d;
-    --bg3: #1e1e28;
-    --surface: #22222e;
-    --border: rgba(255,255,255,0.07);
-    --border2: rgba(255,255,255,0.13);
-    --text: #e8e8f0;
-    --text2: #8888a8;
-    --text3: #4a4a68;
+    --bg: #f0f7ff;
+    --bg2: #e6f2ff;
+    --bg3: #daeeff;
+    --surface: #ffffff;
+    --border: rgba(100,160,220,0.15);
+    --border2: rgba(100,160,220,0.3);
+    --text: #1a3a5c;
+    --text2: #5580a0;
+    --text3: #90b0c8;
     --accent: #6c63ff;
     --accent2: #a89cff;
 
-    --perso-bg: #1e1830;
+    --perso-bg: #ede9ff;
     --perso-border: #6c63ff;
-    --perso-text: #c4beff;
-    --admin-bg: #0d2218;
-    --admin-border: #2ecc8a;
-    --admin-text: #7eddb0;
-    --commer-bg: #2a1a08;
-    --commer-border: #e8a430;
-    --commer-text: #f0c070;
-    --urgent-bg: #2a0d0d;
-    --urgent-border: #e84040;
-    --urgent-text: #f08080;
-    --libre-bg: #1a1a22;
-    --libre-border: #3a3a50;
-    --libre-text: #6a6a88;
-    --nuit-bg: #0d0d22;
-    --nuit-border: #3333aa;
-    --nuit-text: #8888cc;
+    --perso-text: #3d35a0;
+    --admin-bg: #d6f5e8;
+    --admin-border: #0f9e6a;
+    --admin-text: #075c3e;
+    --commer-bg: #fff3d6;
+    --commer-border: #c88a00;
+    --commer-text: #7a5500;
+    --urgent-bg: #ffe0e0;
+    --urgent-border: #e02020;
+    --urgent-text: #8a0000;
+    --libre-bg: #f0f4f8;
+    --libre-border: #b0c4d8;
+    --libre-text: #6080a0;
+    --nuit-bg: #e8eaf6;
+    --nuit-border: #5566cc;
+    --nuit-text: #2233aa;
 
     --col-width: 200px;
     --bridge-width: 52px;
@@ -174,7 +179,7 @@
   }
   .col-body::-webkit-scrollbar { width: 3px; }
   .col-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-  .col-body.night-mode { background: #080810; }
+  .col-body.night-mode { background: #dce8f5; }
 
   /* ── HOUR ROW ── */
   .hour-row {
@@ -222,7 +227,7 @@
     transition: background .12s;
     display: flex; align-items: center; justify-content: center;
   }
-  .add-slot:hover { background: rgba(108,99,255,0.07); }
+  .add-slot:hover { background: rgba(80,120,200,0.06); }
   .add-slot:hover::after {
     content: '+';
     font-size: 14px;
@@ -804,7 +809,7 @@ function makeBridge(night) {
   ns.setAttribute('viewBox', '0 0 52 100');
   ns.setAttribute('preserveAspectRatio', 'none');
 
-  const fill = night ? 'rgba(40,40,120,0.22)' : 'rgba(80,80,160,0.07)';
+  const fill = night ? 'rgba(100,140,200,0.15)' : 'rgba(80,80,160,0.07)';
   const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
   rect.setAttribute('x','0'); rect.setAttribute('y','0');
   rect.setAttribute('width','52'); rect.setAttribute('height','100');
@@ -814,7 +819,7 @@ function makeBridge(night) {
   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   path.setAttribute('d', 'M 0 4 C 52 4, 52 50, 52 50 C 52 50, 52 96, 0 96');
   path.setAttribute('fill', 'none');
-  path.setAttribute('stroke', night ? 'rgba(100,100,200,0.35)' : 'rgba(108,99,255,0.2)');
+  path.setAttribute('stroke', night ? 'rgba(80,120,200,0.4)' : 'rgba(80,120,200,0.25)');
   path.setAttribute('stroke-width', '0.8');
   path.setAttribute('stroke-dasharray', '3 4');
   ns.appendChild(path);
@@ -950,6 +955,25 @@ document.addEventListener('keydown', e => {
 });
 
 render();
+
+// PWA Manifest injection
+const manifest = {
+  name: "Agenda Cylindrique",
+  short_name: "Agenda",
+  start_url: "/",
+  display: "standalone",
+  background_color: "#f0f7ff",
+  theme_color: "#f0f7ff",
+  orientation: "portrait-primary",
+  icons: [{
+    src: "data:image/svg+xml," + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f0f13'/><circle cx='50' cy='50' r='28' fill='none' stroke='%236c63ff' stroke-width='5'/><line x1='50' y1='22' x2='50' y2='50' stroke='%236c63ff' stroke-width='5' stroke-linecap='round'/><line x1='50' y1='50' x2='66' y2='61' stroke='%23e8a430' stroke-width='5' stroke-linecap='round'/><circle cx='50' cy='50' r='4' fill='%236c63ff'/></svg>`),
+    sizes: "any",
+    type: "image/svg+xml"
+  }]
+};
+const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+const url = URL.createObjectURL(blob);
+document.getElementById('pwa-manifest').setAttribute('href', url);
 </script>
 </body>
 </html>
