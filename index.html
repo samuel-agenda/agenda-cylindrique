@@ -565,8 +565,7 @@
   /* Curved top/bottom of each column to simulate cylinder wrap */
   .col-body {
     border-radius: 0 0 0 0;
-    mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 8px), transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 8px, black calc(100% - 8px), transparent 100%);
+
   }
   /* Hour rows with gentle curve via SVG-like border trick */
   .hour-row {
@@ -868,7 +867,7 @@ function render() {
 
     if (scrolls[di] !== undefined) body.scrollTop = scrolls[di];
   });
-  setTimeout(applyCylinderEffect, 0);
+  applyCylinderEffect();
 
   // Drag scroll
   const hs = document.getElementById('hscroll');
@@ -1026,7 +1025,7 @@ function makeTaskPill(task, cardId, di, globalIdx) {
           if (!isNaN(toDi) && !isNaN(toIdx)) {
             const toTask = DATA[toDi].tasks[toIdx] || DATA[toDi].nightTasks[toIdx];
             _pendingSubDrop = { fromDi: data.fromDi, fromIdx: data.fromIdx, subIdx: data.subIdx, subText: data.subText, isNight: data.isNight, toDi, toTaskIdx: toIdx };
-            document.getElementById('sub-confirm-msg').textContent = \`Ajouter « \${data.subText} » dans « \${toTask ? toTask.title : '?'} » ?\`;
+            document.getElementById('sub-confirm-msg').textContent = `Ajouter « \${data.subText} » dans « \${toTask ? toTask.title : '?'} » ?`;
             document.getElementById('sub-confirm-modal').classList.add('show');
           }
         } else if (targetRow) {
@@ -1510,23 +1509,20 @@ function subConfirmCancel() {
   document.getElementById('sub-confirm-modal').classList.remove('show');
 }
 
-// Apply cylindrical rotation to columns
+
+
 function applyCylinderEffect() {
   const cols = document.querySelectorAll('.day-col');
   const total = cols.length;
-  const arcDeg = 28; // total arc degrees across all columns
+  const arcDeg = 22;
   cols.forEach((col, i) => {
     const fraction = total > 1 ? (i / (total - 1)) : 0.5;
     const deg = (fraction - 0.5) * arcDeg;
-    col.style.transform = `perspective(900px) rotateY(${deg}deg)`;
+    const scale = 1 - Math.abs(fraction - 0.5) * 0.035;
+    col.style.transform = `perspective(900px) rotateY(${deg}deg) scale(${scale})`;
     col.style.transformOrigin = '50% 50%';
-    // Slight scale to compensate perspective distortion
-    const scale = 1 - Math.abs(fraction - 0.5) * 0.04;
-    col.style.transform += ` scale(${scale})`;
   });
 }
-
-applyCylinderEffect();
 </script>
 
 <div id="sub-confirm-modal">
