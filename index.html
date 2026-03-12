@@ -590,6 +590,30 @@
   .day-header { position: relative; overflow: hidden; }
 
   .spi-btn.active,.month-btn.active{background:rgba(108,99,255,0.15)!important;border-color:var(--accent)!important;color:var(--accent)!important}
+  .spi-stripe {
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 7px;
+    opacity: 0.55;
+    border-radius: 0 0 0 3px;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .spi-stripe-name {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    white-space: nowrap;
+    font-size: 7px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    pointer-events: none;
+  }
+  .month-cell.spi-pagan { border-left: 3px solid var(--cell-spi-color, #aaa); }
+  .month-cell.spi-moon  { border-left: 3px solid var(--cell-spi-color, #aaa); }
   .month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:16px}
   .month-title{font-size:14px;font-weight:500;color:var(--text);margin:14px 0 6px;font-family:'DM Mono',monospace}
   .month-day-header{font-size:10px;color:var(--text3);text-align:center;padding:3px 0}
@@ -603,6 +627,31 @@
   .hour-row.lunch-border-top::before{content:'🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷';position:absolute;top:-13px;left:0;right:0;font-size:9px;overflow:hidden;white-space:nowrap;pointer-events:none}
   .hour-row.lunch-border-bottom{border-bottom:2px solid rgba(20,40,80,0.35)!important;position:relative}
   .hour-row.lunch-border-bottom::after{content:'🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷🪷';position:absolute;bottom:-13px;left:0;right:0;font-size:9px;overflow:hidden;white-space:nowrap;pointer-events:none}
+
+  .spi-stripe {
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 7px;
+    opacity: 0.55;
+    border-radius: 0 0 0 3px;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .spi-stripe-name {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    white-space: nowrap;
+    font-size: 7px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    pointer-events: none;
+  }
+  .month-cell.spi-pagan { border-left: 3px solid var(--cell-spi-color, #aaa); }
+  .month-cell.spi-moon  { border-left: 3px solid var(--cell-spi-color, #aaa); }
 </style>
 </head>
 <body>
@@ -772,7 +821,12 @@ function render() {
         {
       const _dc = ALL_WEEKS[weekIdx] ? ALL_WEEKS[weekIdx].dates[di] : '';
       const _sv = spiActive ? getSpiVisual(_dc) : null;
-      const _svHtml = _sv ? '<div style="position:absolute;top:3px;right:4px;line-height:1;" title="'+_sv.name+'">'+_sv.svg+'</div>' : '';
+      const _svHtml = _sv
+        ? '<div style="position:absolute;top:2px;right:3px;display:flex;flex-direction:column;align-items:center;gap:1px;">'
+          + '<div style="line-height:1;">'+_sv.svg+'</div>'
+          + '<div style="font-size:8px;font-weight:600;color:'+_sv.color+';letter-spacing:0.02em;text-align:center;max-width:48px;line-height:1.1;">'+_sv.name+'</div>'
+          + '</div>'
+        : '';
       hdr.innerHTML = '<div class="day-name">'+day.name+'</div>'
         + '<div class="day-date-lbl">'+(ALL_WEEKS[weekIdx]?ALL_WEEKS[weekIdx].days[di]:'')+'</div>'
         + '<div class="day-task-count">'+realTasks+' tâche'+(realTasks!==1?'s':'')+'</div>'
@@ -870,6 +924,22 @@ function render() {
     });
 
     mainCol.appendChild(body);
+    // SPI vertical stripe
+    if (spiActive) {
+      const _dc2 = ALL_WEEKS[weekIdx] ? ALL_WEEKS[weekIdx].dates[di] : '';
+      const _sv2 = getSpiVisual(_dc2);
+      if (_sv2) {
+        const stripe = document.createElement('div');
+        stripe.className = 'spi-stripe';
+        stripe.style.background = _sv2.color;
+        const nameEl = document.createElement('div');
+        nameEl.className = 'spi-stripe-name';
+        nameEl.textContent = _sv2.name;
+        stripe.appendChild(nameEl);
+        mainCol.style.position = 'relative';
+        mainCol.appendChild(stripe);
+      }
+    }
     dayCol.appendChild(mainCol);
     wrap.appendChild(dayCol);
 
@@ -1605,15 +1675,26 @@ function getMoonSvg(type) {
   return '<svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="9" fill="#1a1a2e" stroke="#555" stroke-width="1.2"/></svg>';
 }
 
+const SPI_COLORS = {
+  Imbolc: '#7ec86e', Ostara: '#f4a7b9', Beltane: '#ff8c00',
+  Litha: '#ffd700', Lughnasadh: '#daa520', Mabon: '#cd853f',
+  Samhain: '#9370db', Yule: '#87ceeb',
+  full: '#e8d84a', new: '#6688aa'
+};
+
 function getSpiVisual(mmdd) {
   if (!mmdd) return null;
   for (const ev of PAGAN_EVENTS) {
     const d1 = new Date('2026-' + ev.date), d2 = new Date('2026-' + mmdd);
     const diff = Math.floor((d2 - d1) / 86400000);
-    if (diff >= 0 && diff < ev.duration) return {name: ev.name, svg: getSpiSvg(ev.name)};
+    if (diff >= 0 && diff < ev.duration) return {name: ev.name, svg: getSpiSvg(ev.name), color: SPI_COLORS[ev.name]||'#aaa'};
   }
   for (const m of MOON_PHASES) {
-    if (m.date === mmdd) return {name: m.type==='full'?'Pleine lune':'Nouvelle lune', svg: getMoonSvg(m.type)};
+    if (m.date === mmdd) return {
+      name: m.type==='full' ? 'Pleine lune' : 'Nouvelle lune',
+      svg: getMoonSvg(m.type),
+      color: SPI_COLORS[m.type]||'#aaa'
+    };
   }
   return null;
 }
@@ -1650,7 +1731,17 @@ function renderMonthView() {
       const cell=document.createElement('div');
       cell.className='month-cell'+(mmdd===todayMmdd?' today':'');
       const dl=document.createElement('div');dl.className='cell-day';dl.textContent=day;cell.appendChild(dl);
-      if(spiActive){const sv=getSpiVisual(mmdd);if(sv){const b=document.createElement('div');b.className='cell-spi';b.innerHTML=sv.svg;b.title=sv.name;cell.appendChild(b);}}
+      if(spiActive){
+        const sv=getSpiVisual(mmdd);
+        if(sv){
+          cell.style.setProperty('--cell-spi-color', sv.color);
+          cell.classList.add(sv.name==='Pleine lune'||sv.name==='Nouvelle lune'?'spi-moon':'spi-pagan');
+          const b=document.createElement('div');b.className='cell-spi';b.innerHTML=sv.svg;b.title=sv.name;cell.appendChild(b);
+          const nm=document.createElement('div');
+          nm.style.cssText='font-size:7px;font-weight:700;color:'+sv.color+';line-height:1.2;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+          nm.textContent=sv.name;cell.appendChild(nm);
+        }
+      }
       cell.onclick=()=>{
         monthViewActive=false;
         document.getElementById('month-btn').classList.remove('active');
