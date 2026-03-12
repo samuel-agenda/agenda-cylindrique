@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=3.0, user-scalable=yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -67,24 +67,25 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px;
+    padding: 0 10px;
     height: 52px;
     border-bottom: 0.5px solid var(--border2);
     flex-shrink: 0;
     background: var(--bg);
-    gap: 12px;
+    gap: 6px;
+    position: relative;
+    z-index: 10;
   }
+  .topbar-right { position: relative; z-index: 11; }
 
-  .logo {
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
+  .logo { display:none; font-family: 'DM Mono', monospace; font-size: 13px;
     font-weight: 400;
     color: var(--text2);
     letter-spacing: 0.08em;
   }
   .logo span { color: var(--accent2); }
 
-  .week-nav { display: flex; align-items: center; gap: 8px; }
+  .week-nav { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
   .week-btn {
     background: none; border: 0.5px solid var(--border2);
     color: var(--text2); font-size: 11px; padding: 4px 10px;
@@ -92,7 +93,7 @@
     transition: all .15s;
   }
   .week-btn:hover { border-color: var(--accent); color: var(--accent2); }
-  .week-label { font-size: 12px; color: var(--text2); font-family: 'DM Mono', monospace; min-width: 120px; text-align: center; }
+  .week-label { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--text2); font-family: 'DM Mono', monospace; min-width: 120px; text-align: center; }
 
   .topbar-right { display: flex; align-items: center; gap: 8px; }
   .mode-badge {
@@ -652,6 +653,11 @@
   }
   .month-cell.spi-pagan { border-left: 3px solid var(--cell-spi-color, #aaa); }
   .month-cell.spi-moon  { border-left: 3px solid var(--cell-spi-color, #aaa); }
+
+  @media (max-width: 420px) {
+    .logo { display: none; }
+    #topbar { padding: 0 6px; gap: 4px; }
+  }
 </style>
 </head>
 <body>
@@ -664,6 +670,7 @@
     <button class="week-btn" onclick="nextWeek()">→</button>
   </div>
   <div class="topbar-right">
+    <button id="zoom-btn" onclick="zoomFitWeek()" style="padding:4px 9px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;font-family:'DM Mono',monospace;transition:all .15s;" title="Voir toute la semaine">⊡</button>
     <button id="spi-btn" onclick="toggleSpi()" style="padding:4px 9px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;font-family:'DM Mono',monospace;transition:all .15s;">SPI</button>
     <button id="month-btn" onclick="toggleMonthView()" style="padding:4px 9px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;transition:all .15s;">☰</button>
     <span class="mode-badge" id="mode-badge">face jour</span>
@@ -753,28 +760,85 @@
 
 <script>
 // ── DATA ──
+const DAY_NAMES_MODAL = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
 const DAY_HOURS  = Array.from({length:17},(_,i)=>i+6);   // 6..22
 const NIGHT_HOURS= [22,23,0,1,2,3,4,5,6];  // 22h→6h
 
 const ALL_WEEKS=[{"label": "5–11 Janvier", "days": ["5 jan", "6 jan", "7 jan", "8 jan", "9 jan", "10 jan", "11 jan"], "dates": ["01-05", "01-06", "01-07", "01-08", "01-09", "01-10", "01-11"]}, {"label": "12–18 Janvier", "days": ["12 jan", "13 jan", "14 jan", "15 jan", "16 jan", "17 jan", "18 jan"], "dates": ["01-12", "01-13", "01-14", "01-15", "01-16", "01-17", "01-18"]}, {"label": "19–25 Janvier", "days": ["19 jan", "20 jan", "21 jan", "22 jan", "23 jan", "24 jan", "25 jan"], "dates": ["01-19", "01-20", "01-21", "01-22", "01-23", "01-24", "01-25"]}, {"label": "26 jan – 1 fév", "days": ["26 jan", "27 jan", "28 jan", "29 jan", "30 jan", "31 jan", "1 fév"], "dates": ["01-26", "01-27", "01-28", "01-29", "01-30", "01-31", "02-01"]}, {"label": "2–8 Février", "days": ["2 fév", "3 fév", "4 fév", "5 fév", "6 fév", "7 fév", "8 fév"], "dates": ["02-02", "02-03", "02-04", "02-05", "02-06", "02-07", "02-08"]}, {"label": "9–15 Février", "days": ["9 fév", "10 fév", "11 fév", "12 fév", "13 fév", "14 fév", "15 fév"], "dates": ["02-09", "02-10", "02-11", "02-12", "02-13", "02-14", "02-15"]}, {"label": "16–22 Février", "days": ["16 fév", "17 fév", "18 fév", "19 fév", "20 fév", "21 fév", "22 fév"], "dates": ["02-16", "02-17", "02-18", "02-19", "02-20", "02-21", "02-22"]}, {"label": "23 fév – 1 mars", "days": ["23 fév", "24 fév", "25 fév", "26 fév", "27 fév", "28 fév", "1 mars"], "dates": ["02-23", "02-24", "02-25", "02-26", "02-27", "02-28", "03-01"]}, {"label": "2–8 Mars", "days": ["2 mars", "3 mars", "4 mars", "5 mars", "6 mars", "7 mars", "8 mars"], "dates": ["03-02", "03-03", "03-04", "03-05", "03-06", "03-07", "03-08"]}, {"label": "9–15 Mars", "days": ["9 mars", "10 mars", "11 mars", "12 mars", "13 mars", "14 mars", "15 mars"], "dates": ["03-09", "03-10", "03-11", "03-12", "03-13", "03-14", "03-15"]}, {"label": "16–22 Mars", "days": ["16 mars", "17 mars", "18 mars", "19 mars", "20 mars", "21 mars", "22 mars"], "dates": ["03-16", "03-17", "03-18", "03-19", "03-20", "03-21", "03-22"]}, {"label": "23–29 Mars", "days": ["23 mars", "24 mars", "25 mars", "26 mars", "27 mars", "28 mars", "29 mars"], "dates": ["03-23", "03-24", "03-25", "03-26", "03-27", "03-28", "03-29"]}, {"label": "30 mars – 5 avr", "days": ["30 mars", "31 mars", "1 avr", "2 avr", "3 avr", "4 avr", "5 avr"], "dates": ["03-30", "03-31", "04-01", "04-02", "04-03", "04-04", "04-05"]}, {"label": "6–12 Avril", "days": ["6 avr", "7 avr", "8 avr", "9 avr", "10 avr", "11 avr", "12 avr"], "dates": ["04-06", "04-07", "04-08", "04-09", "04-10", "04-11", "04-12"]}, {"label": "13–19 Avril", "days": ["13 avr", "14 avr", "15 avr", "16 avr", "17 avr", "18 avr", "19 avr"], "dates": ["04-13", "04-14", "04-15", "04-16", "04-17", "04-18", "04-19"]}, {"label": "20–26 Avril", "days": ["20 avr", "21 avr", "22 avr", "23 avr", "24 avr", "25 avr", "26 avr"], "dates": ["04-20", "04-21", "04-22", "04-23", "04-24", "04-25", "04-26"]}, {"label": "27 avr – 3 mai", "days": ["27 avr", "28 avr", "29 avr", "30 avr", "1 mai", "2 mai", "3 mai"], "dates": ["04-27", "04-28", "04-29", "04-30", "05-01", "05-02", "05-03"]}, {"label": "4–10 Mai", "days": ["4 mai", "5 mai", "6 mai", "7 mai", "8 mai", "9 mai", "10 mai"], "dates": ["05-04", "05-05", "05-06", "05-07", "05-08", "05-09", "05-10"]}, {"label": "11–17 Mai", "days": ["11 mai", "12 mai", "13 mai", "14 mai", "15 mai", "16 mai", "17 mai"], "dates": ["05-11", "05-12", "05-13", "05-14", "05-15", "05-16", "05-17"]}, {"label": "18–24 Mai", "days": ["18 mai", "19 mai", "20 mai", "21 mai", "22 mai", "23 mai", "24 mai"], "dates": ["05-18", "05-19", "05-20", "05-21", "05-22", "05-23", "05-24"]}, {"label": "25–31 Mai", "days": ["25 mai", "26 mai", "27 mai", "28 mai", "29 mai", "30 mai", "31 mai"], "dates": ["05-25", "05-26", "05-27", "05-28", "05-29", "05-30", "05-31"]}, {"label": "1–7 Juin", "days": ["1 juin", "2 juin", "3 juin", "4 juin", "5 juin", "6 juin", "7 juin"], "dates": ["06-01", "06-02", "06-03", "06-04", "06-05", "06-06", "06-07"]}, {"label": "8–14 Juin", "days": ["8 juin", "9 juin", "10 juin", "11 juin", "12 juin", "13 juin", "14 juin"], "dates": ["06-08", "06-09", "06-10", "06-11", "06-12", "06-13", "06-14"]}, {"label": "15–21 Juin", "days": ["15 juin", "16 juin", "17 juin", "18 juin", "19 juin", "20 juin", "21 juin"], "dates": ["06-15", "06-16", "06-17", "06-18", "06-19", "06-20", "06-21"]}, {"label": "22–28 Juin", "days": ["22 juin", "23 juin", "24 juin", "25 juin", "26 juin", "27 juin", "28 juin"], "dates": ["06-22", "06-23", "06-24", "06-25", "06-26", "06-27", "06-28"]}, {"label": "29 juin – 5 juil", "days": ["29 juin", "30 juin", "1 juil", "2 juil", "3 juil", "4 juil", "5 juil"], "dates": ["06-29", "06-30", "07-01", "07-02", "07-03", "07-04", "07-05"]}, {"label": "6–12 Juillet", "days": ["6 juil", "7 juil", "8 juil", "9 juil", "10 juil", "11 juil", "12 juil"], "dates": ["07-06", "07-07", "07-08", "07-09", "07-10", "07-11", "07-12"]}, {"label": "13–19 Juillet", "days": ["13 juil", "14 juil", "15 juil", "16 juil", "17 juil", "18 juil", "19 juil"], "dates": ["07-13", "07-14", "07-15", "07-16", "07-17", "07-18", "07-19"]}, {"label": "20–26 Juillet", "days": ["20 juil", "21 juil", "22 juil", "23 juil", "24 juil", "25 juil", "26 juil"], "dates": ["07-20", "07-21", "07-22", "07-23", "07-24", "07-25", "07-26"]}, {"label": "27 juil – 2 août", "days": ["27 juil", "28 juil", "29 juil", "30 juil", "31 juil", "1 août", "2 août"], "dates": ["07-27", "07-28", "07-29", "07-30", "07-31", "08-01", "08-02"]}, {"label": "3–9 Août", "days": ["3 août", "4 août", "5 août", "6 août", "7 août", "8 août", "9 août"], "dates": ["08-03", "08-04", "08-05", "08-06", "08-07", "08-08", "08-09"]}, {"label": "10–16 Août", "days": ["10 août", "11 août", "12 août", "13 août", "14 août", "15 août", "16 août"], "dates": ["08-10", "08-11", "08-12", "08-13", "08-14", "08-15", "08-16"]}, {"label": "17–23 Août", "days": ["17 août", "18 août", "19 août", "20 août", "21 août", "22 août", "23 août"], "dates": ["08-17", "08-18", "08-19", "08-20", "08-21", "08-22", "08-23"]}, {"label": "24–30 Août", "days": ["24 août", "25 août", "26 août", "27 août", "28 août", "29 août", "30 août"], "dates": ["08-24", "08-25", "08-26", "08-27", "08-28", "08-29", "08-30"]}, {"label": "31 août – 6 sep", "days": ["31 août", "1 sep", "2 sep", "3 sep", "4 sep", "5 sep", "6 sep"], "dates": ["08-31", "09-01", "09-02", "09-03", "09-04", "09-05", "09-06"]}, {"label": "7–13 Septembre", "days": ["7 sep", "8 sep", "9 sep", "10 sep", "11 sep", "12 sep", "13 sep"], "dates": ["09-07", "09-08", "09-09", "09-10", "09-11", "09-12", "09-13"]}, {"label": "14–20 Septembre", "days": ["14 sep", "15 sep", "16 sep", "17 sep", "18 sep", "19 sep", "20 sep"], "dates": ["09-14", "09-15", "09-16", "09-17", "09-18", "09-19", "09-20"]}, {"label": "21–27 Septembre", "days": ["21 sep", "22 sep", "23 sep", "24 sep", "25 sep", "26 sep", "27 sep"], "dates": ["09-21", "09-22", "09-23", "09-24", "09-25", "09-26", "09-27"]}, {"label": "28 sep – 4 oct", "days": ["28 sep", "29 sep", "30 sep", "1 oct", "2 oct", "3 oct", "4 oct"], "dates": ["09-28", "09-29", "09-30", "10-01", "10-02", "10-03", "10-04"]}, {"label": "5–11 Octobre", "days": ["5 oct", "6 oct", "7 oct", "8 oct", "9 oct", "10 oct", "11 oct"], "dates": ["10-05", "10-06", "10-07", "10-08", "10-09", "10-10", "10-11"]}, {"label": "12–18 Octobre", "days": ["12 oct", "13 oct", "14 oct", "15 oct", "16 oct", "17 oct", "18 oct"], "dates": ["10-12", "10-13", "10-14", "10-15", "10-16", "10-17", "10-18"]}, {"label": "19–25 Octobre", "days": ["19 oct", "20 oct", "21 oct", "22 oct", "23 oct", "24 oct", "25 oct"], "dates": ["10-19", "10-20", "10-21", "10-22", "10-23", "10-24", "10-25"]}, {"label": "26 oct – 1 nov", "days": ["26 oct", "27 oct", "28 oct", "29 oct", "30 oct", "31 oct", "1 nov"], "dates": ["10-26", "10-27", "10-28", "10-29", "10-30", "10-31", "11-01"]}, {"label": "2–8 Novembre", "days": ["2 nov", "3 nov", "4 nov", "5 nov", "6 nov", "7 nov", "8 nov"], "dates": ["11-02", "11-03", "11-04", "11-05", "11-06", "11-07", "11-08"]}, {"label": "9–15 Novembre", "days": ["9 nov", "10 nov", "11 nov", "12 nov", "13 nov", "14 nov", "15 nov"], "dates": ["11-09", "11-10", "11-11", "11-12", "11-13", "11-14", "11-15"]}, {"label": "16–22 Novembre", "days": ["16 nov", "17 nov", "18 nov", "19 nov", "20 nov", "21 nov", "22 nov"], "dates": ["11-16", "11-17", "11-18", "11-19", "11-20", "11-21", "11-22"]}, {"label": "23–29 Novembre", "days": ["23 nov", "24 nov", "25 nov", "26 nov", "27 nov", "28 nov", "29 nov"], "dates": ["11-23", "11-24", "11-25", "11-26", "11-27", "11-28", "11-29"]}, {"label": "30 nov – 6 déc", "days": ["30 nov", "1 déc", "2 déc", "3 déc", "4 déc", "5 déc", "6 déc"], "dates": ["11-30", "12-01", "12-02", "12-03", "12-04", "12-05", "12-06"]}, {"label": "7–13 Décembre", "days": ["7 déc", "8 déc", "9 déc", "10 déc", "11 déc", "12 déc", "13 déc"], "dates": ["12-07", "12-08", "12-09", "12-10", "12-11", "12-12", "12-13"]}, {"label": "14–20 Décembre", "days": ["14 déc", "15 déc", "16 déc", "17 déc", "18 déc", "19 déc", "20 déc"], "dates": ["12-14", "12-15", "12-16", "12-17", "12-18", "12-19", "12-20"]}, {"label": "21–27 Décembre", "days": ["21 déc", "22 déc", "23 déc", "24 déc", "25 déc", "26 déc", "27 déc"], "dates": ["12-21", "12-22", "12-23", "12-24", "12-25", "12-26", "12-27"]}, {"label": "28 déc – 3 jan", "days": ["28 déc", "29 déc", "30 déc", "31 déc", "1 jan", "2 jan", "3 jan"], "dates": ["12-28", "12-29", "12-30", "12-31", "01-01", "01-02", "01-03"]}];
 const PAGAN_EVENTS=[{"name": "Imbolc", "date": "02-01", "duration": 3}, {"name": "Ostara", "date": "03-20", "duration": 3}, {"name": "Beltane", "date": "05-01", "duration": 3}, {"name": "Litha", "date": "06-21", "duration": 3}, {"name": "Lughnasadh", "date": "08-01", "duration": 3}, {"name": "Mabon", "date": "09-22", "duration": 3}, {"name": "Samhain", "date": "10-31", "duration": 3}, {"name": "Yule", "date": "12-21", "duration": 3}];
 const MOON_PHASES=[{"type": "full", "date": "01-03"}, {"type": "new", "date": "01-18"}, {"type": "full", "date": "02-01"}, {"type": "new", "date": "02-17"}, {"type": "full", "date": "03-03"}, {"type": "new", "date": "03-19"}, {"type": "full", "date": "04-01"}, {"type": "new", "date": "04-17"}, {"type": "full", "date": "05-01"}, {"type": "new", "date": "05-16"}, {"type": "full", "date": "05-31"}, {"type": "new", "date": "06-15"}, {"type": "full", "date": "06-29"}, {"type": "new", "date": "07-14"}, {"type": "full", "date": "07-29"}, {"type": "new", "date": "08-12"}, {"type": "full", "date": "08-28"}, {"type": "new", "date": "09-11"}, {"type": "full", "date": "09-26"}, {"type": "new", "date": "10-10"}, {"type": "full", "date": "10-26"}, {"type": "new", "date": "11-09"}, {"type": "full", "date": "11-24"}, {"type": "new", "date": "12-09"}, {"type": "full", "date": "12-24"}];
-let weekIdx=9;
+let weekIdx=0;
+// Global day index helpers
+function dayIdxToDate(idx) {
+  const d = new Date(2026, 0, 5);
+  d.setDate(d.getDate() + idx);
+  return d;
+}
+function dateToMmdd(d) {
+  return String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function dayIdxToMmdd(idx) { return dateToMmdd(dayIdxToDate(idx)); }
+function dayIdxToDayName(idx) {
+  const names = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+  return names[idx % 7];
+}
+function dayIdxToLabel(idx) {
+  const d = dayIdxToDate(idx);
+  const months = ['jan','fév','mars','avr','mai','juin','juil','août','sep','oct','nov','déc'];
+  return d.getDate() + ' ' + months[d.getMonth()];
+}
+// Find today's index
+function getTodayIdx() {
+  const today = new Date();
+  const start = new Date(2026, 0, 5);
+  const diff = Math.floor((today - start) / 86400000);
+  return Math.max(0, Math.min(358, diff));
+}
+const TOTAL_DAYS = 359; // Jan 5 to Dec 29 2026
+
 let spiActive=false;
 let monthViewActive=false;
+let centerDayIdx = getTodayIdx();
 
 let isNight = false;
 
 // Storage key
-const STORAGE_KEY = 'agenda-cylindrique-v1';
+const STORAGE_KEY = 'agenda-cylindrique-v2';
 
-function defaultData() {
-  const n=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
-  return n.map(name=>({name,tasks:[],nightTasks:[]}));
+// DATA_MAP keyed by 'MM-DD'
+function defaultDataMap() { return {}; }
+
+function getDayData(mmdd) {
+  if (!DATA_MAP[mmdd]) DATA_MAP[mmdd] = {tasks:[], nightTasks:[]};
+  return DATA_MAP[mmdd];
 }
-// Load or init
-let DATA = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || defaultData();
-function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA)); } catch(e){} }
+
+let DATA_MAP = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || defaultDataMap();
+
+// Migrate old v1 data if present
+(function migrateV1() {
+  try {
+    const old = JSON.parse(localStorage.getItem('agenda-cylindrique-v1') || 'null');
+    if (old && Array.isArray(old)) {
+      // old[0]=Lundi...old[6]=Dimanche mapped to current week
+      const today = new Date();
+      const dow = (today.getDay()+6)%7; // 0=Mon
+      old.forEach((day, di) => {
+        const d = new Date(today);
+        d.setDate(today.getDate() - dow + di);
+        const mmdd = String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        if (day.tasks?.length || day.nightTasks?.length) {
+          DATA_MAP[mmdd] = {tasks: day.tasks||[], nightTasks: day.nightTasks||[]};
+        }
+      });
+      if (Object.keys(DATA_MAP).length) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA_MAP));
+      }
+    }
+  } catch(e) {}
+})();
+
+function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA_MAP)); } catch(e){} }
 
 const expanded = {};
 const checked  = {};
@@ -787,200 +851,262 @@ let modalTaskIdx = null;
 let modalIsNight = false;
 
 function getTaskList(di) {
-  return isNight ? DATA[di].nightTasks : DATA[di].tasks;
+  const d = getDayData(dayIdxToMmdd(di));
+  return isNight ? d.nightTasks : d.tasks;
 }
 
 // ── RENDER ──
-function render() {
-  const wrap = document.getElementById('cols-wrap');
-  const scrolls = {};
-  wrap.querySelectorAll('.col-body').forEach((el,i) => scrolls[i] = el.scrollTop);
-  wrap.innerHTML = '';
 
-  const hours = isNight ? NIGHT_HOURS : DAY_HOURS;
-  document.getElementById('week-label').textContent = ALL_WEEKS[weekIdx]?ALL_WEEKS[weekIdx].label:'';
-  document.getElementById('mode-badge').textContent = isNight ? 'face nuit' : 'face jour';
-  document.getElementById('mode-badge').className = 'mode-badge' + (isNight ? ' night' : '');
-  document.getElementById('flip-btn').className = 'flip-btn' + (isNight ? ' night' : '');
+// ── INFINITE SCROLL ──
+const BUFFER = 21;
+const COL_W  = 200; // must match --col-width CSS var
 
-  const nowH = new Date().getHours();
+function makeDayCol(globalDayIdx) {
+  const DAY_NAMES  = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+  const THEME_MAP  = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
+  const lunchNames = ['Lundi','Mardi','Jeudi','Vendredi'];
+  const mShort     = ['jan','fév','mars','avr','mai','juin','juil','août','sep','oct','nov','déc'];
 
-  DATA.forEach((day, di) => {
-    const dayCol = document.createElement('div');
-    dayCol.className = 'day-col';
+  const d       = dayIdxToDate(globalDayIdx);
+  const mmdd    = dateToMmdd(d);
+  const dowIdx  = (d.getDay() + 6) % 7;
+  const dayName = DAY_NAMES[dowIdx];
+  const dayLabel= d.getDate() + ' ' + mShort[d.getMonth()];
+  const isToday = mmdd === dateToMmdd(new Date());
+  const dayData = getDayData(mmdd);
+  const taskList= isNight ? dayData.nightTasks : dayData.tasks;
+  const realTasks = taskList.filter(t => t.cat !== 'libre').length;
+  const hours   = isNight ? NIGHT_HOURS : DAY_HOURS;
+  const nowH    = new Date().getHours();
 
-    const mainCol = document.createElement('div');
-    mainCol.className = 'main-col';
+  const dayCol  = document.createElement('div');
+  const dayTheme= !isNight ? ' day-theme-' + THEME_MAP[dowIdx] : '';
+  dayCol.className = 'day-col' + dayTheme;
+  dayCol.dataset.globalIdx = globalDayIdx;
+  dayCol.dataset.mmdd = mmdd;
 
-    // Header
-    const hdr = document.createElement('div');
-    hdr.className = 'day-header';
-    if (isNight) hdr.style.background = '#080810';
-    const taskList = isNight ? day.nightTasks : day.tasks;
-    const realTasks = taskList.filter(t => t.cat !== 'libre').length;
-        {
-      const _dc = ALL_WEEKS[weekIdx] ? ALL_WEEKS[weekIdx].dates[di] : '';
-      const _sv = spiActive ? getSpiVisual(_dc) : null;
-      const _svHtml = _sv
-        ? '<div style="position:absolute;top:2px;right:3px;display:flex;flex-direction:column;align-items:center;gap:1px;">'
-          + '<div style="line-height:1;">'+_sv.svg+'</div>'
-          + '<div style="font-size:8px;font-weight:600;color:'+_sv.color+';letter-spacing:0.02em;text-align:center;max-width:48px;line-height:1.1;">'+_sv.name+'</div>'
-          + '</div>'
-        : '';
-      hdr.innerHTML = '<div class="day-name">'+day.name+'</div>'
-        + '<div class="day-date-lbl">'+(ALL_WEEKS[weekIdx]?ALL_WEEKS[weekIdx].days[di]:'')+'</div>'
-        + '<div class="day-task-count">'+realTasks+' tâche'+(realTasks!==1?'s':'')+'</div>'
-        + _svHtml;
+  const mainCol = document.createElement('div');
+  mainCol.className = 'main-col';
+
+  // Header
+  const hdr = document.createElement('div');
+  hdr.className = 'day-header' + (isToday ? ' today-header' : '');
+  if (isNight) hdr.style.background = '#080810';
+  {
+    const _sv = spiActive ? getSpiVisual(mmdd) : null;
+    const _svHtml = _sv
+      ? '<div style="position:absolute;top:2px;right:3px;display:flex;flex-direction:column;align-items:center;gap:1px;">'
+        + '<div style="line-height:1;">'+_sv.svg+'</div>'
+        + '<div style="font-size:8px;font-weight:600;color:'+_sv.color+';letter-spacing:0.02em;text-align:center;max-width:48px;line-height:1.1;">'+_sv.name+'</div>'
+        + '</div>'
+      : '';
+    hdr.innerHTML = '<div class="day-name">'+dayName+'</div>'
+      + '<div class="day-date-lbl">'+dayLabel+'</div>'
+      + '<div class="day-task-count">'+realTasks+' tâche'+(realTasks!==1?'s':'')+'</div>'
+      + _svHtml;
+  }
+  mainCol.appendChild(hdr);
+
+  // Body
+  const body = document.createElement('div');
+  body.className = 'col-body' + (isNight ? ' night-mode' : '');
+  body.dataset.mmdd = mmdd;
+
+  hours.forEach(h => {
+    const row = document.createElement('div');
+    const isLunch  = !isNight && lunchNames.includes(dayName) && (h===12||h===13);
+    const isLTop   = isLunch && h===12;
+    const isLBot   = isLunch && h===13;
+    const isNow    = !isNight && h === nowH;
+    let rc = 'hour-row' + (isNight?' night-row':'');
+    if (isLunch) rc += ' lunch-zone';
+    if (isLTop)  rc += ' lunch-border-top';
+    if (isLBot)  rc += ' lunch-border-bottom';
+    row.className = rc;
+    row.dataset.di   = globalDayIdx;
+    row.dataset.h    = h;
+    row.dataset.mmdd = mmdd;
+    row.setAttribute('data-di', globalDayIdx);
+    row.setAttribute('data-h',  h);
+
+    const lbl = document.createElement('div');
+    lbl.className = 'hour-label';
+    lbl.textContent = (h < 0 ? h+24 : h) + 'h';
+    row.appendChild(lbl);
+
+    if (isNow) {
+      const nl = document.createElement('div');
+      nl.className = 'now-line';
+      nl.style.top = Math.round((new Date().getMinutes()/60)*62) + 'px';
+      row.appendChild(nl);
     }
-    mainCol.appendChild(hdr);
 
-    // Scrollable body
-    const dayThemeMap = {'Lundi':'lundi','Mardi':'mardi','Mercredi':'mercredi','Jeudi':'jeudi','Vendredi':'vendredi','Samedi':'samedi','Dimanche':'dimanche'};
-    const dayTheme = !isNight ? (' day-theme-' + (dayThemeMap[day.name] || '')) : '';
-    dayCol.className = 'day-col' + dayTheme;
-    const body = document.createElement('div');
-    body.className = 'col-body' + (isNight ? ' night-mode' : '');
-
-    hours.forEach(h => {
-      const row = document.createElement('div');
-      const lunchDays = [0,1,3,4];
-      const isLunch = !isNight && lunchDays.includes(di) && (h === 12 || h === 13);
-      const isLunchTop = !isNight && lunchDays.includes(di) && h === 12;
-      const isLunchBottom = !isNight && lunchDays.includes(di) && h === 13;
-      let rowClass = 'hour-row' + (isNight ? ' night-row' : '');
-      if (isLunch) rowClass += ' lunch-zone';
-      if (isLunchTop) rowClass += ' lunch-border-top';
-      if (isLunchBottom) rowClass += ' lunch-border-bottom';
-      row.className = rowClass;
-      row.setAttribute('data-di',di);row.setAttribute('data-h',h);row.dataset.di=di;row.dataset.h=h;
-      row.addEventListener('dragover', (e) => { e.preventDefault(); row.classList.add('drag-over'); });
-      row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
-      row.addEventListener('drop', (e) => {
-        e.preventDefault();
-        row.classList.remove('drag-over');
-        try {
-          const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-          const toDi = parseInt(row.getAttribute('data-di'));
-          const toH = parseInt(row.getAttribute('data-h'));
-
-          if (data.type === 'subtask') {
-            // Move subtask to new day as standalone task
-            const fromList = data.isNight ? DATA[data.fromDi].nightTasks : DATA[data.fromDi].tasks;
-            const fromTask = fromList[data.fromIdx];
-            // Mark subtask as done in original task
-            if (!fromTask.done) fromTask.done = {};
-            fromTask.done[data.subIdx] = true;
-            // Create new standalone task on target day
-            const toList = DATA[toDi].tasks;
-            toList.push({ h: toH, title: data.subText, cat: fromTask.cat, subs: [], done: {} });
-            toList.sort((a,b) => a.h - b.h);
-          } else {
-            // Move whole task
-            const fromList = data.isNight ? DATA[data.fromDi].nightTasks : DATA[data.fromDi].tasks;
-            const toList = DATA[toDi].tasks;
-            const task = fromList.splice(data.globalIdx, 1)[0];
-            task.h = toH;
-            toList.push(task);
-            toList.sort((a,b) => a.h - b.h);
-          }
-          save(); render();
-        } catch(err) { console.error(err); }
+    const tasks = taskList.filter(t => t.h === h);
+    const rowContent = document.createElement('div');
+    rowContent.className = 'row-content';
+    if (!tasks.length) {
+      const slot = document.createElement('div');
+      slot.className = 'add-slot';
+      slot.onclick = () => openAddModal(globalDayIdx, h, isNight);
+      rowContent.appendChild(slot);
+    } else {
+      tasks.forEach((task, ti) => {
+        const cardId = (isNight?'n':'d')+globalDayIdx+'-h'+h+'-ti'+ti;
+        rowContent.appendChild(makeTaskPill(task, cardId, globalDayIdx, ti));
       });
-      const isNow = !isNight && weekIdx === 0 && h === nowH;
-      if (isNow) row.classList.add('hour-now');
-
-      const lbl = document.createElement('div');
-      lbl.className = 'hour-label';
-      lbl.textContent = (h < 0 ? h+24 : h) + 'h';
-      row.appendChild(lbl);
-
-      if (isNow) {
-        const nowLine = document.createElement('div');
-        nowLine.className = 'now-line';
-        const mins = new Date().getMinutes();
-        nowLine.style.top = Math.round((mins/60)*62) + 'px';
-        row.appendChild(nowLine);
-      }
-
-      const content = document.createElement('div');
-      content.className = 'hour-content';
-
-      const tasks = taskList.filter(t => t.h === h);
-      if (tasks.length === 0) {
-        const slot = document.createElement('div');
-        slot.className = 'add-slot';
-        slot.onclick = () => openAddModal(di, h, isNight);
-        content.appendChild(slot);
-      } else {
-        tasks.forEach((task, ti) => {
-          const globalIdx = taskList.indexOf(task);
-          const cardId = `${isNight?'n':'d'}${di}-h${h}-ti${ti}`;
-          content.appendChild(makeTaskPill(task, cardId, di, globalIdx));
-        });
-      }
-
-      row.appendChild(content);
-      body.appendChild(row);
-    });
-
-    mainCol.appendChild(body);
-    // SPI vertical stripe
-    if (spiActive) {
-      const _dc2 = ALL_WEEKS[weekIdx] ? ALL_WEEKS[weekIdx].dates[di] : '';
-      const _sv2 = getSpiVisual(_dc2);
-      if (_sv2) {
-        const stripe = document.createElement('div');
-        stripe.className = 'spi-stripe';
-        stripe.style.background = _sv2.color;
-        const nameEl = document.createElement('div');
-        nameEl.className = 'spi-stripe-name';
-        nameEl.textContent = _sv2.name;
-        stripe.appendChild(nameEl);
-        mainCol.style.position = 'relative';
-        mainCol.appendChild(stripe);
-      }
     }
-    dayCol.appendChild(mainCol);
-    wrap.appendChild(dayCol);
-
-    // Night bridge
-    if (di < DATA.length - 1) {
-      wrap.appendChild(makeBridge(isNight));
-    }
-
-    if (scrolls[di] !== undefined) body.scrollTop = scrolls[di];
+    row.appendChild(rowContent);
+    body.appendChild(row);
   });
-  applyCylinderEffect();
-  applyCylinderEffect();
 
-  // Drag scroll
-  const hs = document.getElementById('hscroll');
-  let isDown = false, startX, scrollLeft;
-  hs.onmousedown = e => { if (e.target.closest('.task-pill,.modal-input,.modal-select,.sub-check,.add-slot')) return; isDown=true; startX=e.pageX-hs.offsetLeft; scrollLeft=hs.scrollLeft; };
-  document.onmouseup = () => isDown = false;
-  hs.onmousemove = e => { if (!isDown) return; e.preventDefault(); const x=e.pageX-hs.offsetLeft; hs.scrollLeft=scrollLeft-(x-startX)*1.1; };
+  mainCol.appendChild(body);
 
-  // Touch scroll axis-locked + week swipe (swipe always changes week)
-  let _tx=null,_ty=null,_tAxis=null,_tSL=null;
-  hs.ontouchstart=e=>{
-    if(e.target.closest('.task-pill,.sub-item'))return;
-    _tx=e.touches[0].pageX;_ty=e.touches[0].pageY;_tSL=hs.scrollLeft;scrollLeft=hs.scrollLeft;_tAxis=null;
-  };
-  hs.ontouchmove=e=>{
-    if(_tx===null)return;
-    const dx=Math.abs(e.touches[0].pageX-_tx),dy=Math.abs(e.touches[0].pageY-_ty);
-    if(!_tAxis)_tAxis=dx>dy?'h':'v';
-    if(_tAxis==='h'){e.preventDefault();hs.scrollLeft=_tSL+(_tx-e.touches[0].pageX);}
-  };
-  hs.ontouchend=e=>{
-    if(_tAxis==='h'&&_tx!==null){
-      const swipe=_tx-e.changedTouches[0].pageX;
-      if(swipe>110)nextWeek();
-      else if(swipe<-110)prevWeek();
+  // SPI stripe
+  if (spiActive) {
+    const _sv2 = getSpiVisual(mmdd);
+    if (_sv2) {
+      const stripe = document.createElement('div');
+      stripe.className = 'spi-stripe';
+      stripe.style.background = _sv2.color;
+      const nameEl = document.createElement('div');
+      nameEl.className = 'spi-stripe-name';
+      nameEl.textContent = _sv2.name;
+      stripe.appendChild(nameEl);
+      mainCol.style.position = 'relative';
+      mainCol.appendChild(stripe);
     }
-    _tx=null;_ty=null;_tAxis=null;
-  };
+  }
+  dayCol.appendChild(mainCol);
+
+  // Drop zone for drag-and-drop
+  dayCol.addEventListener('dragover',  e => { e.preventDefault(); dayCol.classList.add('drag-over-col'); });
+  dayCol.addEventListener('dragleave', ()  => dayCol.classList.remove('drag-over-col'));
+  dayCol.addEventListener('drop', e => {
+    e.preventDefault(); dayCol.classList.remove('drag-over-col');
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+      const fromData = getDayData(dayIdxToMmdd(data.di));
+      const fromList = data.isNight ? fromData.nightTasks : fromData.tasks;
+      const moved = fromList.splice(data.globalIdx, 1)[0];
+      if (moved) {
+        const toData = getDayData(mmdd);
+        (data.isNight ? toData.nightTasks : toData.tasks).push(moved);
+        (data.isNight ? toData.nightTasks : toData.tasks).sort((a,b)=>a.h-b.h);
+        save(); render();
+      }
+    } catch(ex) {}
+  });
+
+  return dayCol;
 }
+
+function updateTopBarLabel() {
+  const mFull  = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const mShort = ['jan','fév','mars','avr','mai','juin','juil','août','sep','oct','nov','déc'];
+  const hs   = document.getElementById('hscroll');
+  const wrap = document.getElementById('cols-wrap');
+  const cols = wrap.querySelectorAll('.day-col');
+  // Find center-most visible column
+  const hsLeft = hs.scrollLeft;
+  const hsW    = hs.clientWidth;
+  let centerCol = cols[Math.floor(cols.length/2)];
+  let bestDist  = Infinity;
+  cols.forEach(c => {
+    const cx = c.offsetLeft - hsLeft + COL_W/2;
+    const d  = Math.abs(cx - hsW/2);
+    if (d < bestDist) { bestDist = d; centerCol = c; }
+  });
+  const gi = parseInt(centerCol.dataset.globalIdx);
+  centerDayIdx = gi;
+  const d1 = dayIdxToDate(Math.max(0, gi - 3));
+  const d2 = dayIdxToDate(Math.min(TOTAL_DAYS-1, gi + 3));
+  const label = d1.getMonth()===d2.getMonth()
+    ? d1.getDate()+'–'+d2.getDate()+' '+mFull[d1.getMonth()]
+    : d1.getDate()+' '+mShort[d1.getMonth()]+' – '+d2.getDate()+' '+mShort[d2.getMonth()];
+  document.getElementById('week-label').textContent = label;
+  document.getElementById('mode-badge').textContent = isNight ? 'face nuit' : 'face jour';
+  document.getElementById('mode-badge').className   = 'mode-badge' + (isNight ? ' night' : '');
+  document.getElementById('flip-btn').className     = 'flip-btn'   + (isNight ? ' night' : '');
+}
+
+// The infinite scroll state: firstDayIdx = global index of leftmost rendered col
+let _scrollFirstIdx = 0;
+let _scrolling = false;
+
+function initScroll() {
+  const wrap = document.getElementById('cols-wrap');
+  const hs   = document.getElementById('hscroll');
+
+  // Save vertical scrolls
+  const vScrolls = {};
+  wrap.querySelectorAll('.col-body').forEach(b => { if(b.dataset.mmdd) vScrolls[b.dataset.mmdd]=b.scrollTop; });
+
+  wrap.innerHTML = '';
+  const half  = Math.floor(BUFFER/2);
+  _scrollFirstIdx = Math.max(0, centerDayIdx - half);
+  const endIdx    = Math.min(TOTAL_DAYS, _scrollFirstIdx + BUFFER);
+  _scrollFirstIdx = Math.max(0, endIdx - BUFFER);
+
+  for (let i = _scrollFirstIdx; i < endIdx; i++) {
+    wrap.appendChild(makeDayCol(i));
+  }
+
+  // Restore vertical scrolls
+  wrap.querySelectorAll('.col-body').forEach(b => {
+    if (vScrolls[b.dataset.mmdd] !== undefined) b.scrollTop = vScrolls[b.dataset.mmdd];
+  });
+
+  // Scroll hscroll so that centerDayIdx column is visible center
+  const targetCol = centerDayIdx - _scrollFirstIdx;
+  const targetScrollLeft = targetCol * COL_W - (hs.clientWidth - COL_W) / 2;
+  hs.scrollLeft = Math.max(0, targetScrollLeft);
+
+  applyCylinderEffect();
+  updateTopBarLabel();
+
+  // Attach scroll listener (only once)
+  hs.onscroll = onInfiniteScroll;
+}
+
+function onInfiniteScroll() {
+  if (_scrolling) return;
+  const wrap = document.getElementById('cols-wrap');
+  const hs   = document.getElementById('hscroll');
+  const cols = wrap.querySelectorAll('.day-col');
+
+  // How far from left/right edge?
+  const distFromRight = wrap.offsetWidth - (hs.scrollLeft + hs.clientWidth);
+  const distFromLeft  = hs.scrollLeft;
+  const threshold     = COL_W * 4; // recycle when 4 cols from edge
+
+  if (distFromRight < threshold && _scrollFirstIdx + BUFFER < TOTAL_DAYS) {
+    // Append a day on the right, remove from left
+    _scrolling = true;
+    const newIdx = _scrollFirstIdx + BUFFER;
+    wrap.appendChild(makeDayCol(newIdx));
+    wrap.removeChild(wrap.firstElementChild);
+    _scrollFirstIdx++;
+    hs.scrollLeft -= COL_W; // compensate removal of left col
+    _scrolling = false;
+  } else if (distFromLeft < threshold && _scrollFirstIdx > 0) {
+    // Prepend a day on the left, remove from right
+    _scrolling = true;
+    const newIdx = _scrollFirstIdx - 1;
+    wrap.insertBefore(makeDayCol(newIdx), wrap.firstElementChild);
+    wrap.removeChild(wrap.lastElementChild);
+    _scrollFirstIdx--;
+    hs.scrollLeft += COL_W; // compensate addition of left col
+    _scrolling = false;
+  }
+
+  applyCylinderEffect();
+  updateTopBarLabel();
+}
+
+function render() {
+  initScroll();
+}
+
 
 function makeTaskPill(task, cardId, di, globalIdx) {
   const pill = document.createElement('div');
@@ -1020,9 +1146,10 @@ function makeTaskPill(task, cardId, di, globalIdx) {
     const row=under.closest('.hour-row');
     if(row){
       const toDi=parseInt(row.dataset.di),toH=parseInt(row.dataset.h);
-      const fromList=(isNight||modalIsNight)?DATA[di].nightTasks:DATA[di].tasks;
+      const _fromD=getDayData(dayIdxToMmdd(di));
+      const fromList=(isNight||modalIsNight)?_fromD.nightTasks:_fromD.tasks;
       const moved=fromList.splice(globalIdx,1)[0];
-      if(moved){moved.h=toH;DATA[toDi].tasks.push(moved);DATA[toDi].tasks.sort((a,b)=>a.h-b.h);save();render();}
+      if(moved){moved.h=toH;const _toD=getDayData(dayIdxToMmdd(toDi));_toD.tasks.push(moved);_toD.tasks.sort((a,b)=>a.h-b.h);save();render();}
     }
   });
   pill.addEventListener('dragover', (e) => {
@@ -1154,7 +1281,7 @@ function makeTaskPill(task, cardId, di, globalIdx) {
           const toDi = parseInt(targetPill.dataset.di);
           const toIdx = parseInt(targetPill.dataset.idx);
           if (!isNaN(toDi) && !isNaN(toIdx)) {
-            const toTask = DATA[toDi].tasks[toIdx] || DATA[toDi].nightTasks[toIdx];
+            const toTask = getDayData(dayIdxToMmdd(toDi)).tasks[toIdx] || getDayData(dayIdxToMmdd(toDi)).nightTasks[toIdx];
             _pendingSubDrop = { fromDi: data.fromDi, fromIdx: data.fromIdx, subIdx: data.subIdx, subText: data.subText, isNight: data.isNight, toDi, toTaskIdx: toIdx };
             document.getElementById('sub-confirm-msg').textContent = `Ajouter « \${data.subText} » dans « \${toTask ? toTask.title : '?'} » ?`;
             document.getElementById('sub-confirm-modal').classList.add('show');
@@ -1162,12 +1289,12 @@ function makeTaskPill(task, cardId, di, globalIdx) {
         } else if (targetRow) {
           const toDi = parseInt(targetRow.getAttribute('data-di'));
           const toH = parseInt(targetRow.getAttribute('data-h'));
-          const fromList = data.isNight ? DATA[data.fromDi].nightTasks : DATA[data.fromDi].tasks;
+          const fromList = data.isNight ? getDayData(dayIdxToMmdd(data.fromDi)).nightTasks : getDayData(dayIdxToMmdd(data.fromDi)).tasks;
           const fromTask = fromList[data.fromIdx];
           if (!fromTask.done) fromTask.done = {};
           fromTask.done[data.subIdx] = true;
-          DATA[toDi].tasks.push({ h: toH, title: data.subText, cat: fromTask.cat, subs: [], done: {} });
-          DATA[toDi].tasks.sort((a,b) => a.h - b.h);
+          getDayData(dayIdxToMmdd(toDi)).tasks.push({ h: toH, title: data.subText, cat: fromTask.cat, subs: [], done: {} });
+          getDayData(dayIdxToMmdd(toDi)).tasks.sort((a,b) => a.h - b.h);
           save(); render();
         }
       });
@@ -1485,7 +1612,7 @@ function openAddModal(di, h, night) {
   modalDayIdx = di;
   modalHour = h;
   modalIsNight = night;
-  document.getElementById('modal-title').textContent = `Nouvelle tâche — ${DATA[di].name} ${h}h`;
+  document.getElementById('modal-title').textContent = `Nouvelle tâche — ${DAY_NAMES_MODAL[dayIdxToDate(di).getDay()===0?6:dayIdxToDate(di).getDay()-1]} ${h}h`;
   document.getElementById('m-title').value = '';
   document.getElementById('m-cat').value = night ? 'nuit' : 'perso';
   document.getElementById('m-hour').value = h;
@@ -1498,7 +1625,7 @@ function openAddModal(di, h, night) {
 }
 
 function openEditModal(di, taskIdx) {
-  const list = isNight ? DATA[di].nightTasks : DATA[di].tasks;
+  const list = isNight ? getDayData(dayIdxToMmdd(di)).nightTasks : getDayData(dayIdxToMmdd(di)).tasks;
   const task = list[taskIdx];
   modalMode = 'edit';
   modalDayIdx = di;
@@ -1535,7 +1662,8 @@ function saveTask() {
   const h = parseInt(document.getElementById('m-hour').value) || (modalIsNight ? 20 : 9);
   const subs = Array.from(document.querySelectorAll('.modal-sub-input')).map(i=>i.value.trim()).filter(Boolean);
   const done = subs.map(() => false);
-  const list = modalIsNight ? DATA[modalDayIdx].nightTasks : DATA[modalDayIdx].tasks;
+  const _d = getDayData(dayIdxToMmdd(modalDayIdx));
+  const list = modalIsNight ? _d.nightTasks : _d.tasks;
   if (modalMode === 'add') {
     list.push({h, cat, title, subs, done});
     list.sort((a,b) => a.h - b.h);
@@ -1549,7 +1677,8 @@ function saveTask() {
 }
 
 function deleteTask() {
-  const list = modalIsNight ? DATA[modalDayIdx].nightTasks : DATA[modalDayIdx].tasks;
+  const _dd = getDayData(dayIdxToMmdd(modalDayIdx));
+  const list = modalIsNight ? _dd.nightTasks : _dd.tasks;
   list.splice(modalTaskIdx, 1);
   save();
   closeModal();
@@ -1584,8 +1713,6 @@ function showToast(msg) {
 }
 
 // ── WEEK NAV ──
-function prevWeek() { if(weekIdx>0){weekIdx--;render();} }
-function nextWeek() { if(weekIdx<ALL_WEEKS.length-1){weekIdx++;render();} }
 
 // ── FLIP ──
 function flipWeek() { isNight = !isNight; render(); }
@@ -1622,11 +1749,11 @@ let _pendingSubDrop = null;
 function subConfirmOk() {
   if (!_pendingSubDrop) return;
   const {fromDi, fromIdx, subIdx, subText, toDi, toTaskIdx, isNight} = _pendingSubDrop;
-  const fromList = isNight ? DATA[fromDi].nightTasks : DATA[fromDi].tasks;
+  const fromList = isNight ? getDayData(dayIdxToMmdd(fromDi)).nightTasks : getDayData(dayIdxToMmdd(fromDi)).tasks;
   const fromTask = fromList[fromIdx];
   if (!fromTask.done) fromTask.done = {};
   fromTask.done[subIdx] = true;
-  const toList = DATA[toDi].tasks;
+  const toList = getDayData(dayIdxToMmdd(toDi)).tasks;
   const toTask = toList[toTaskIdx];
   if (!toTask.subs) toTask.subs = [];
   toTask.subs.push(subText);
@@ -1769,6 +1896,35 @@ function applyCylinderEffect() {
   });
 }
 
+
+// ── ZOOM FIT ──
+let _zoomLevel = 1;
+function zoomFitWeek() {
+  const hs = document.getElementById('hscroll');
+  const colW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--col-width')) || 200;
+  const totalW = 7 * colW;
+  const screenW = window.innerWidth;
+  if (_zoomLevel === 1) {
+    // zoom out to fit all 7 cols
+    _zoomLevel = screenW / totalW;
+    hs.style.transformOrigin = 'top left';
+    hs.style.transform = 'scale(' + _zoomLevel + ')';
+    hs.style.width = (screenW / _zoomLevel) + 'px';
+    hs.parentElement.style.overflow = 'hidden';
+    document.getElementById('zoom-btn').textContent = '1:1';
+  } else {
+    // restore
+    _zoomLevel = 1;
+    hs.style.transform = '';
+    hs.style.width = '';
+    hs.parentElement.style.overflow = '';
+    document.getElementById('zoom-btn').textContent = '⊡';
+  }
+}
+
+
+function prevWeek() { centerDayIdx = Math.max(0, centerDayIdx-7); initScroll(); }
+function nextWeek() { centerDayIdx = Math.min(TOTAL_DAYS-1, centerDayIdx+7); initScroll(); }
 </script>
 
 <div id="sub-confirm-modal">
