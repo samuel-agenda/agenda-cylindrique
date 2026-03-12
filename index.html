@@ -722,16 +722,6 @@ const STORAGE_KEY = 'agenda-cylindrique-v1';
 function defaultData() {
   const names = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
   return names.map(name => ({ name, tasks: [], nightTasks: [] }));
-});
-  return [
-    emptyDay('Lundi',    ['16 mars','23 mars','30 mars','6 avr']),
-    emptyDay('Mardi',    ['17 mars','24 mars','31 mars','7 avr']),
-    emptyDay('Mercredi', ['18 mars','25 mars','1 avr','8 avr']),
-    emptyDay('Jeudi',    ['12 mars','19 mars','26 mars','2 avr']),
-    emptyDay('Vendredi', ['13 mars','20 mars','27 mars','3 avr']),
-    emptyDay('Samedi',   ['14 mars','21 mars','28 mars','4 avr']),
-    emptyDay('Dimanche', ['15 mars','22 mars','29 mars','5 avr']),
-  ];
 }
 // Load or init
 let DATA = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || defaultData();
