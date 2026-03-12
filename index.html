@@ -890,7 +890,7 @@ function render() {
   document.onmouseup = () => isDown = false;
   hs.onmousemove = e => { if (!isDown) return; e.preventDefault(); const x=e.pageX-hs.offsetLeft; hs.scrollLeft=scrollLeft-(x-startX)*1.1; };
 
-  // Touch scroll axis-locked + week swipe
+  // Touch scroll axis-locked + week swipe (swipe always changes week)
   let _tx=null,_ty=null,_tAxis=null,_tSL=null;
   hs.ontouchstart=e=>{
     if(e.target.closest('.task-pill,.sub-item'))return;
@@ -905,8 +905,8 @@ function render() {
   hs.ontouchend=e=>{
     if(_tAxis==='h'&&_tx!==null){
       const swipe=_tx-e.changedTouches[0].pageX;
-      if(swipe>80&&hs.scrollLeft+hs.clientWidth>=hs.scrollWidth-20)nextWeek();
-      else if(swipe<-80&&hs.scrollLeft<=20)prevWeek();
+      if(swipe>110)nextWeek();
+      else if(swipe<-110)prevWeek();
     }
     _tx=null;_ty=null;_tAxis=null;
   };
