@@ -415,6 +415,55 @@
     opacity: 0; transition: all .25s; pointer-events: none;
   }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Day-specific color themes */
+  .day-theme-lundi { background: #e4f2e4 !important; }
+  .day-theme-lundi .day-header { background: #e8f4e8 !important; border-bottom-color: #5a9e6f44 !important; }
+  .day-theme-lundi .day-header::after { background: linear-gradient(to right, #5a9e6f, transparent) !important; opacity: 0.5 !important; }
+  .day-theme-lundi .hour-row { border-bottom-color: #5a9e6f18 !important; }
+  .day-theme-lundi .hour-label { color: #5a9e6f99 !important; }
+  .day-theme-lundi .day-name { color: #2d5a3d !important; }
+  .day-theme-mardi { background: #fff5d6 !important; }
+  .day-theme-mardi .day-header { background: #fff8e0 !important; border-bottom-color: #c49a0044 !important; }
+  .day-theme-mardi .day-header::after { background: linear-gradient(to right, #c49a00, transparent) !important; opacity: 0.5 !important; }
+  .day-theme-mardi .hour-row { border-bottom-color: #c49a0018 !important; }
+  .day-theme-mardi .hour-label { color: #c49a0099 !important; }
+  .day-theme-mardi .day-name { color: #6b5200 !important; }
+  .day-theme-mercredi { background: #ffe8d6 !important; }
+  .day-theme-mercredi .day-header { background: #ffede0 !important; border-bottom-color: #d4622a44 !important; }
+  .day-theme-mercredi .day-header::after { background: linear-gradient(to right, #d4622a, transparent) !important; opacity: 0.5 !important; }
+  .day-theme-mercredi .hour-row { border-bottom-color: #d4622a18 !important; }
+  .day-theme-mercredi .hour-label { color: #d4622a99 !important; }
+  .day-theme-mercredi .day-name { color: #7a3010 !important; }
+  .day-theme-jeudi { background: #dceeff !important; }
+  .day-theme-jeudi .day-header { background: #e4eeff !important; border-bottom-color: #2255cc44 !important; }
+  .day-theme-jeudi .day-header::after { background: linear-gradient(to right, #2255cc, transparent) !important; opacity: 0.5 !important; }
+  .day-theme-jeudi .hour-row { border-bottom-color: #2255cc18 !important; }
+  .day-theme-jeudi .hour-label { color: #2255cc99 !important; }
+  .day-theme-jeudi .day-name { color: #0a2a6e !important; }
+  .day-theme-vendredi { background: #ece0ff !important; }
+  .day-theme-vendredi .day-header { background: #ede8ff !important; border-bottom-color: #7744cc44 !important; }
+  .day-theme-vendredi .day-header::after { background: linear-gradient(to right, #7744cc, transparent) !important; opacity: 0.5 !important; }
+  .day-theme-vendredi .hour-row { border-bottom-color: #7744cc18 !important; }
+  .day-theme-vendredi .hour-label { color: #7744cc99 !important; }
+  .day-theme-vendredi .day-name { color: #3d1a88 !important; }
+  .day-theme-samedi { background: #daf4ff !important; }
+  .day-theme-samedi .day-header { background: #e4f8ff !important; border-bottom-color: #1a9ac444 !important; }
+  .day-theme-samedi .day-header::after { background: linear-gradient(to right, #1a9ac4, transparent) !important; opacity: 0.5 !important; }
+  .day-theme-samedi .hour-row { border-bottom-color: #1a9ac418 !important; }
+  .day-theme-samedi .hour-label { color: #1a9ac499 !important; }
+  .day-theme-samedi .day-name { color: #094d6a !important; }
+  .day-theme-dimanche { background: #e0f8e8 !important; }
+  .day-theme-dimanche .day-header { background: #e8faf0 !important; border-bottom-color: #3aaa7044 !important; }
+  .day-theme-dimanche .day-header::after { background: linear-gradient(to right, #3aaa70, transparent) !important; opacity: 0.5 !important; }
+  .day-theme-dimanche .hour-row { border-bottom-color: #3aaa7018 !important; }
+  .day-theme-dimanche .hour-label { color: #3aaa7099 !important; }
+  .day-theme-dimanche .day-name { color: #1a5c38 !important; }
+
+  .task-pill[draggable=true] { cursor: grab; }
+  .task-pill[draggable=true]:active { cursor: grabbing; opacity: 0.7; }
+  .hour-row.drag-over { background: rgba(108,99,255,0.08); border-radius: 4px; }
+  .drag-ghost { opacity: 0.4; }
 </style>
 </head>
 <body>
@@ -517,7 +566,7 @@ const DAY_HOURS  = Array.from({length:17},(_,i)=>i+6);   // 6..22
 const NIGHT_HOURS= Array.from({length:9}, (_,i)=>i+19);  // 19..3
 
 const WEEK_OFFSETS = [
-  '17 – 23 mars','24 – 30 mars','31 mars – 6 avr','7 – 13 avr'
+  '12 – 18 mars 2026','19 – 25 mars 2026','26 mars – 1 avr 2026','2 – 8 avr 2026'
 ];
 
 let weekIdx = 0;
@@ -527,94 +576,21 @@ let isNight = false;
 const STORAGE_KEY = 'agenda-cylindrique-v1';
 
 function defaultData() {
+  const emptyDay = (name, dates) => ({
+    name, dates,
+    tasks: [],
+    nightTasks: []
+  });
   return [
-    {name:'Lundi',   dates:['17 mars','24 mars','31 mars','7 avr'],
-      tasks:[
-        {h:6, cat:'perso',  title:'Sport',              subs:['Étirements','Footing 30 min'],   done:[false,true]},
-        {h:8, cat:'admin',  title:'Emails & compta',    subs:['Devis en attente','Relances'],    done:[true,false]},
-        {h:10,cat:'commer', title:'Rdv client Dupont',  subs:['Préparer dossier','Envoyer devis'],done:[false,false]},
-        {h:12,cat:'libre',  title:'Déjeuner',           subs:[],done:[]},
-        {h:13,cat:'admin',  title:'Réunion équipe',     subs:['Ordre du jour','Actions semaine'],done:[true,false]},
-        {h:17,cat:'urgent', title:'Litige client',      subs:['Appel assurance','Courrier'],     done:[false,false]},
-      ],
-      nightTasks:[
-        {h:20,cat:'nuit',title:'Lecture',       subs:['30 min','Journal de bord'],done:[false,false]},
-        {h:22,cat:'nuit',title:'Prépa mardi',   subs:['Relire agenda'],done:[false]},
-      ]
-    },
-    {name:'Mardi',   dates:['18 mars','25 mars','1 avr','8 avr'],
-      tasks:[
-        {h:8, cat:'commer',title:'Prospection',         subs:['Liste contacts','10 appels','CRM'],done:[true,false,false]},
-        {h:10,cat:'admin', title:'Paie équipe',         subs:['Vérifier heures','Virements'],    done:[false,false]},
-        {h:12,cat:'libre', title:'Déjeuner',            subs:[],done:[]},
-        {h:14,cat:'perso', title:'Formation management',subs:['Module 3','Exercice pratique'],   done:[false,false]},
-        {h:17,cat:'commer',title:'Suivi devis',         subs:['Relancer 3 prospects'],           done:[false]},
-      ],
-      nightTasks:[
-        {h:21,cat:'nuit',title:'Appel famille',subs:[],done:[]},
-      ]
-    },
-    {name:'Mercredi',dates:['19 mars','26 mars','2 avr','9 avr'],
-      tasks:[
-        {h:9, cat:'admin', title:'Planification S+1',  subs:['Récap tâches','Priorités','Briefing'],done:[false,false,false]},
-        {h:11,cat:'urgent',title:'Sinistre véhicule',  subs:['Déclaration assurance','Garage'],done:[false,false]},
-        {h:12,cat:'libre', title:'Déjeuner',           subs:[],done:[]},
-        {h:13,cat:'perso', title:'Temps personnel',    subs:['Lecture','Stratégie'],done:[false,false]},
-        {h:15,cat:'commer',title:'Appels commerciaux', subs:['5 clients actifs','2 devis'],done:[false,false]},
-      ],
-      nightTasks:[
-        {h:20,cat:'nuit',title:'Soirée libre',     subs:[],done:[]},
-        {h:22,cat:'nuit',title:'Méditation soir',  subs:['10 min respiration'],done:[false]},
-      ]
-    },
-    {name:'Jeudi',   dates:['20 mars','27 mars','3 avr','10 avr'],
-      tasks:[
-        {h:8, cat:'perso', title:'Méditation & agenda',subs:['Méditation 15 min','Revue objectifs'],done:[false,false]},
-        {h:9, cat:'admin', title:'Gestion RH',         subs:['Entretien candidat','Plannings'],done:[false,false]},
-        {h:11,cat:'commer',title:'Rdv prospect',       subs:['Visite site','Devis estimatif'],done:[false,false]},
-        {h:12,cat:'libre', title:'Déjeuner',           subs:[],done:[]},
-        {h:13,cat:'commer',title:'Tournée chantiers',  subs:['Chantier Martin','Chantier Benoît','SCI Orly'],done:[false,false,false]},
-        {h:17,cat:'admin', title:'Reporting hebdo',    subs:['Tableau de bord','Synthèse direction'],done:[false,false]},
-      ],
-      nightTasks:[
-        {h:19,cat:'nuit',title:'Sport soir',     subs:['Natation 45 min'],done:[false]},
-        {h:21,cat:'nuit',title:'Prépa vendredi', subs:['Réviser bilan comm.'],done:[false]},
-      ]
-    },
-    {name:'Vendredi',dates:['21 mars','28 mars','4 avr','11 avr'],
-      tasks:[
-        {h:9, cat:'commer',title:'Bilan commercial',  subs:['CA vs objectif','Taux conversion'],done:[false,false]},
-        {h:11,cat:'admin', title:'Facturation',        subs:['Factures à émettre','Relances'],done:[false,false]},
-        {h:12,cat:'libre', title:'Déjeuner',           subs:[],done:[]},
-        {h:14,cat:'perso', title:'Stratégie & vision', subs:['Objectifs trimestriels','Idées dev.'],done:[false,false]},
-        {h:16,cat:'libre', title:'Fin de semaine',     subs:[],done:[]},
-      ],
-      nightTasks:[
-        {h:19,cat:'nuit',title:'Apéro équipe',     subs:[],done:[]},
-        {h:21,cat:'nuit',title:'Soirée personnelle',subs:[],done:[]},
-      ]
-    },
-    {name:'Samedi',  dates:['22 mars','29 mars','5 avr','12 avr'],
-      tasks:[
-        {h:9, cat:'perso',title:'Activité personnelle',subs:[],done:[]},
-        {h:12,cat:'libre',title:'Déjeuner famille',    subs:[],done:[]},
-      ],
-      nightTasks:[
-        {h:20,cat:'nuit',title:'Sortie',subs:[],done:[]},
-      ]
-    },
-    {name:'Dimanche',dates:['23 mars','30 mars','6 avr','13 avr'],
-      tasks:[
-        {h:10,cat:'perso',title:'Repos & récupération',subs:[],done:[]},
-        {h:14,cat:'perso',title:'Préparation semaine', subs:['Relire objectifs','Préparer agenda lundi'],done:[false,false]},
-      ],
-      nightTasks:[
-        {h:21,cat:'nuit',title:'Détente',subs:[],done:[]},
-      ]
-    },
+    emptyDay('Lundi',    ['12 mars','19 mars','26 mars','2 avr']),
+    emptyDay('Mardi',    ['13 mars','20 mars','27 mars','3 avr']),
+    emptyDay('Mercredi', ['14 mars','21 mars','28 mars','4 avr']),
+    emptyDay('Jeudi',    ['15 mars','22 mars','29 mars','5 avr']),
+    emptyDay('Vendredi', ['16 mars','23 mars','30 mars','6 avr']),
+    emptyDay('Samedi',   ['17 mars','24 mars','31 mars','7 avr']),
+    emptyDay('Dimanche', ['18 mars','25 mars','1 avr','8 avr']),
   ];
 }
-
 // Load or init
 let DATA = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || defaultData();
 function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(DATA)); } catch(e){} }
@@ -668,12 +644,34 @@ function render() {
     mainCol.appendChild(hdr);
 
     // Scrollable body
+    const dayThemeMap = {'Lundi':'lundi','Mardi':'mardi','Mercredi':'mercredi','Jeudi':'jeudi','Vendredi':'vendredi','Samedi':'samedi','Dimanche':'dimanche'};
+    const dayTheme = !isNight ? (' day-theme-' + (dayThemeMap[day.name] || '')) : '';
     const body = document.createElement('div');
-    body.className = 'col-body' + (isNight ? ' night-mode' : '');
+    body.className = 'col-body' + (isNight ? ' night-mode' : '') + dayTheme;
 
     hours.forEach(h => {
       const row = document.createElement('div');
       row.className = 'hour-row' + (isNight ? ' night-row' : '');
+      row.setAttribute('data-di', di);
+      row.setAttribute('data-h', h);
+      row.addEventListener('dragover', (e) => { e.preventDefault(); row.classList.add('drag-over'); });
+      row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+      row.addEventListener('drop', (e) => {
+        e.preventDefault();
+        row.classList.remove('drag-over');
+        try {
+          const {di: fromDi, globalIdx: fromIdx, isNight: fromNight} = JSON.parse(e.dataTransfer.getData('text/plain'));
+          const toDi = parseInt(row.getAttribute('data-di'));
+          const toH = parseInt(row.getAttribute('data-h'));
+          const fromList = fromNight ? DATA[fromDi].nightTasks : DATA[fromDi].tasks;
+          const toList = isNight ? DATA[toDi].nightTasks : DATA[toDi].tasks;
+          const task = fromList.splice(fromIdx, 1)[0];
+          task.h = toH;
+          toList.push(task);
+          toList.sort((a,b) => a.h - b.h);
+          save(); render();
+        } catch(err) { console.error(err); }
+      });
       const isNow = !isNight && weekIdx === 0 && h === nowH;
       if (isNow) row.classList.add('hour-now');
 
@@ -740,6 +738,12 @@ function render() {
 function makeTaskPill(task, cardId, di, globalIdx) {
   const pill = document.createElement('div');
   pill.className = `task-pill cat-${task.cat}`;
+  pill.setAttribute('draggable', 'true');
+  pill.addEventListener('dragstart', (e) => {
+    e.dataTransfer.setData('text/plain', JSON.stringify({di, globalIdx, isNight: modalIsNight||isNight}));
+    setTimeout(() => pill.classList.add('drag-ghost'), 0);
+  });
+  pill.addEventListener('dragend', () => pill.classList.remove('drag-ghost'));
   const isOpen = !!expanded[cardId];
   const hasSubs = task.subs && task.subs.length > 0;
 
