@@ -587,6 +587,49 @@
     z-index: 1;
   }
   .day-header { position: relative; overflow: hidden; }
+
+  .spi-btn, .month-btn {
+    padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border2);
+    background: transparent; color: var(--text2); font-size: 11px;
+    cursor: pointer; font-family: 'DM Mono', monospace; letter-spacing: 0.5px;
+    transition: all 0.15s;
+  }
+  .spi-btn.active { background: rgba(120,60,200,0.15); border-color: #9966dd; color: #9966dd; }
+  .month-btn.active { background: rgba(60,120,200,0.15); border-color: #4488cc; color: #4488cc; }
+
+  /* Month view */
+  #month-view {
+    padding: 12px; overflow-y: auto;
+    height: calc(100vh - 56px);
+    background: var(--bg);
+  }
+  .month-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; margin-bottom: 20px; }
+  .month-title { font-size: 15px; font-weight: 500; color: var(--text); margin: 16px 0 8px; font-family: 'DM Mono', monospace; }
+  .month-day-header { font-size: 10px; color: var(--text3); text-align: center; padding: 4px 0; }
+  .month-cell {
+    min-height: 52px; border-radius: 6px; padding: 4px 5px;
+    background: var(--surface); border: 0.5px solid var(--border);
+    font-size: 11px; cursor: pointer; transition: background 0.1s;
+    position: relative; overflow: hidden;
+  }
+  .month-cell:hover { background: var(--bg3); }
+  .month-cell.other-month { opacity: 0.35; }
+  .month-cell.today { border-color: var(--accent); border-width: 1.5px; }
+  .month-cell .cell-day { font-size: 12px; font-weight: 500; color: var(--text2); }
+  .month-cell .cell-spi { font-size: 14px; position: absolute; bottom: 2px; right: 3px; }
+  .month-cell .cell-task-count { font-size: 9px; color: var(--text3); margin-top: 2px; }
+
+  /* SPI day badge in week view */
+  .spi-day-badge {
+    position: absolute; top: 2px; right: 4px;
+    font-size: 13px; z-index: 10; pointer-events: none;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15));
+  }
+  .spi-moon-badge {
+    font-size: 11px; color: var(--text3);
+    text-align: center; padding: 1px 0; letter-spacing: 1px;
+    pointer-events: none; opacity: 0.7;
+  }
 </style>
 </head>
 <body>
@@ -599,6 +642,8 @@
     <button class="week-btn" onclick="nextWeek()">→</button>
   </div>
   <div class="topbar-right">
+    <button class="spi-btn" id="spi-btn" onclick="toggleSpi()" title="Spirituel — fêtes & lune">SPI</button>
+    <button class="month-btn" id="month-btn" onclick="toggleMonthView()" title="Vue mensuelle">☰</button>
     <span class="mode-badge" id="mode-badge">face jour</span>
     <button class="flip-btn" id="flip-btn" onclick="flipWeek()">
       <span class="flip-icon">↻</span> retourner
@@ -606,6 +651,8 @@
   </div>
 </div>
 
+<div id="month-view" style="display:none"></div>
+<div id="spi-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;pointer-events:none"></div>
 <div id="hscroll">
   <div id="cols-wrap"></div>
 </div>
@@ -692,27 +739,14 @@ const WEEK_OFFSETS = [
   '10 – 16 mars 2026','17 – 23 mars 2026','24 – 30 mars 2026','31 mars – 6 avr 2026'
 ];
 
-let weekIdx = 0;
 let isNight = false;
 
 // Storage key
 const STORAGE_KEY = 'agenda-cylindrique-v1';
 
 function defaultData() {
-  const emptyDay = (name, dates) => ({
-    name, dates,
-    tasks: [],
-    nightTasks: []
-  });
-  return [
-    emptyDay('Lundi',    ['16 mars','23 mars','30 mars','6 avr']),
-    emptyDay('Mardi',    ['17 mars','24 mars','31 mars','7 avr']),
-    emptyDay('Mercredi', ['18 mars','25 mars','1 avr','8 avr']),
-    emptyDay('Jeudi',    ['12 mars','19 mars','26 mars','2 avr']),
-    emptyDay('Vendredi', ['13 mars','20 mars','27 mars','3 avr']),
-    emptyDay('Samedi',   ['14 mars','21 mars','28 mars','4 avr']),
-    emptyDay('Dimanche', ['15 mars','22 mars','29 mars','5 avr']),
-  ];
+  const names = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+  return names.map(name => ({ name, tasks: [], nightTasks: [] }));
 }
 // Load or init
 let DATA = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || defaultData();
@@ -740,7 +774,7 @@ function render() {
   wrap.innerHTML = '';
 
   const hours = isNight ? NIGHT_HOURS : DAY_HOURS;
-  document.getElementById('week-label').textContent = WEEK_OFFSETS[weekIdx] || '';
+  document.getElementById('week-label').textContent = ALL_WEEKS[weekIdx] ? ALL_WEEKS[weekIdx].label : '';
   document.getElementById('mode-badge').textContent = isNight ? 'face nuit' : 'face jour';
   document.getElementById('mode-badge').className = 'mode-badge' + (isNight ? ' night' : '');
   document.getElementById('flip-btn').className = 'flip-btn' + (isNight ? ' night' : '');
@@ -762,7 +796,7 @@ function render() {
     const realTasks = taskList.filter(t => t.cat !== 'libre').length;
     hdr.innerHTML = `
       <div class="day-name">${day.name}</div>
-      <div class="day-date-lbl">${day.dates[weekIdx] || ''}</div>
+      <div class="day-date-lbl">${(ALL_WEEKS[weekIdx] ? ALL_WEEKS[weekIdx].days[di] : '')}</div>
       <div class="day-task-count">${realTasks} tâche${realTasks!==1?'s':''}</div>`;
     mainCol.appendChild(hdr);
 
@@ -786,6 +820,17 @@ function render() {
       row.className = rowClass;
       row.setAttribute('data-di', di);
       row.setAttribute('data-h', h);
+      // SPI moon badge inline
+      if (spiActive && !isNight) {
+        const dayDateStr2 = ALL_WEEKS[weekIdx] ? ALL_WEEKS[weekIdx].dates[di] : '';
+        const moonNow = MOON_PHASES.find(m => m.date === dayDateStr2);
+        if (moonNow && h === 6) {
+          const moonRow = document.createElement('div');
+          moonRow.className = 'spi-moon-badge';
+          moonRow.textContent = moonNow.symbol + ' ' + (moonNow.type === 'full' ? 'Pleine lune' : 'Nouvelle lune');
+          row.appendChild(moonRow);
+        }
+      }
       row.addEventListener('dragover', (e) => { e.preventDefault(); row.classList.add('drag-over'); });
       row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
       row.addEventListener('drop', (e) => {
@@ -876,11 +921,26 @@ function render() {
   document.onmouseup = () => isDown = false;
   hs.onmousemove = e => { if (!isDown) return; e.preventDefault(); const x=e.pageX-hs.offsetLeft; hs.scrollLeft=scrollLeft-(x-startX)*1.1; };
 
-  // Touch scroll
-  let touchX = null;
-  hs.ontouchstart = e => { touchX = e.touches[0].pageX; scrollLeft = hs.scrollLeft; };
-  hs.ontouchmove = e => { if (touchX === null) return; const dx = touchX - e.touches[0].pageX; hs.scrollLeft = scrollLeft + dx; };
-  hs.ontouchend = () => touchX = null;
+  // Touch scroll — axis-locked
+  let touchX = null, touchY = null, scrollAxis = null;
+  hs.ontouchstart = e => {
+    if (e.target.closest('.task-pill,.sub-item')) return;
+    touchX = e.touches[0].pageX;
+    touchY = e.touches[0].pageY;
+    scrollLeft = hs.scrollLeft;
+    scrollAxis = null;
+  };
+  hs.ontouchmove = e => {
+    if (touchX === null) return;
+    const dx = Math.abs(e.touches[0].pageX - touchX);
+    const dy = Math.abs(e.touches[0].pageY - touchY);
+    if (!scrollAxis) scrollAxis = dx > dy ? 'h' : 'v';
+    if (scrollAxis === 'h') {
+      e.preventDefault();
+      hs.scrollLeft = scrollLeft + (touchX - e.touches[0].pageX);
+    }
+  };
+  hs.ontouchend = () => { touchX = null; touchY = null; scrollAxis = null; };
 }
 
 function makeTaskPill(task, cardId, di, globalIdx) {
@@ -894,6 +954,59 @@ function makeTaskPill(task, cardId, di, globalIdx) {
     setTimeout(() => pill.classList.add('drag-ghost'), 0);
   });
   pill.addEventListener('dragend', () => pill.classList.remove('drag-ghost'));
+  // Touch drag for mobile
+  let pillTouchGhost = null, pillDragging = false;
+  pill.addEventListener('touchstart', (e) => {
+    e.stopPropagation();
+    pillDragging = false;
+    const touch = e.touches[0];
+    pillTouchGhost = null;
+    pill._touchStartX = touch.clientX;
+    pill._touchStartY = touch.clientY;
+    pill._touchTimer = setTimeout(() => {
+      pillDragging = true;
+      pill.classList.add('drag-ghost');
+      pillTouchGhost = document.createElement('div');
+      pillTouchGhost.textContent = task.title;
+      pillTouchGhost.style.cssText = `position:fixed;z-index:9998;padding:8px 14px;background:var(--surface);border:1.5px solid var(--accent);border-radius:10px;font-size:13px;color:var(--text);pointer-events:none;opacity:0.92;box-shadow:0 4px 16px rgba(0,0,0,0.15);left:${touch.clientX+12}px;top:${touch.clientY-24}px;max-width:160px;white-space:nowrap;overflow:hidden;`;
+      document.body.appendChild(pillTouchGhost);
+    }, 400);
+  }, {passive:true});
+  pill.addEventListener('touchmove', (e) => {
+    if (!pillDragging) {
+      clearTimeout(pill._touchTimer);
+      return;
+    }
+    e.preventDefault();
+    const touch = e.touches[0];
+    if (pillTouchGhost) {
+      pillTouchGhost.style.left = touch.clientX+12+'px';
+      pillTouchGhost.style.top = touch.clientY-24+'px';
+    }
+    document.querySelectorAll('.hour-row.drag-over').forEach(el => el.classList.remove('drag-over'));
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (el) { const row = el.closest('.hour-row'); if (row) row.classList.add('drag-over'); }
+  }, {passive:false});
+  pill.addEventListener('touchend', (e) => {
+    clearTimeout(pill._touchTimer);
+    pill.classList.remove('drag-ghost');
+    if (pillTouchGhost) { pillTouchGhost.remove(); pillTouchGhost = null; }
+    document.querySelectorAll('.hour-row.drag-over').forEach(el => el.classList.remove('drag-over'));
+    if (!pillDragging) return;
+    pillDragging = false;
+    const touch = e.changedTouches[0];
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!el) return;
+    const targetRow = el.closest('.hour-row');
+    if (targetRow) {
+      const toDi = parseInt(targetRow.getAttribute('data-di'));
+      const toH = parseInt(targetRow.getAttribute('data-h'));
+      const fromList = (isNight||modalIsNight) ? DATA[di].nightTasks : DATA[di].tasks;
+      const toList = DATA[toDi].tasks;
+      const movedTask = fromList.splice(globalIdx, 1)[0];
+      if (movedTask) { movedTask.h = toH; toList.push(movedTask); toList.sort((a,b)=>a.h-b.h); save(); render(); }
+    }
+  });
   pill.addEventListener('dragover', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -1511,18 +1624,149 @@ function subConfirmCancel() {
 
 
 
+
+
+// ── SPI & MONTH VIEW STATE ──
+let spiActive = false;
+let monthViewActive = false;
+
+function toggleSpi() {
+  spiActive = !spiActive;
+  document.getElementById('spi-btn').classList.toggle('active', spiActive);
+  render();
+}
+
+function toggleMonthView() {
+  monthViewActive = !monthViewActive;
+  document.getElementById('month-btn').classList.toggle('active', monthViewActive);
+  document.getElementById('hscroll').style.display = monthViewActive ? 'none' : '';
+  document.getElementById('month-view').style.display = monthViewActive ? 'block' : 'none';
+  if (monthViewActive) renderMonthView();
+}
+
+function getSpiForDate(dateStr) {
+  const results = [];
+  // Pagan events
+  for (const ev of PAGAN_EVENTS) {
+    const evDate = new Date(ev.date);
+    const checkDate = new Date(dateStr);
+    const diff = Math.floor((checkDate - evDate) / 86400000);
+    if (diff >= 0 && diff < ev.duration) results.push({type:'pagan', symbol: ev.symbol, name: ev.name});
+  }
+  // Moon phases
+  for (const m of MOON_PHASES) {
+    if (m.date === dateStr) results.push({type:'moon', symbol: m.symbol, name: m.type === 'full' ? 'Pleine lune' : 'Nouvelle lune'});
+  }
+  return results;
+}
+
+function renderMonthView() {
+  const container = document.getElementById('month-view');
+  container.innerHTML = '';
+  
+  const months = [
+    [0,'Janvier'],[1,'Février'],[2,'Mars'],[3,'Avril'],[4,'Mai'],[5,'Juin'],
+    [6,'Juillet'],[7,'Août'],[8,'Septembre'],[9,'Octobre'],[10,'Novembre'],[11,'Décembre']
+  ];
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  const dayNames = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+
+  months.forEach(([monthIdx, monthName]) => {
+    const title = document.createElement('div');
+    title.className = 'month-title';
+    title.textContent = monthName + ' 2026';
+    container.appendChild(title);
+
+    const grid = document.createElement('div');
+    grid.className = 'month-grid';
+
+    // Day headers
+    dayNames.forEach(d => {
+      const h = document.createElement('div');
+      h.className = 'month-day-header';
+      h.textContent = d;
+      grid.appendChild(h);
+    });
+
+    const firstDay = new Date(2026, monthIdx, 1);
+    let startDow = firstDay.getDay(); // 0=Sun
+    startDow = startDow === 0 ? 6 : startDow - 1; // Monday-first
+
+    const daysInMonth = new Date(2026, monthIdx+1, 0).getDate();
+    
+    // Leading empty cells
+    for (let i = 0; i < startDow; i++) {
+      const empty = document.createElement('div');
+      empty.className = 'month-cell other-month';
+      grid.appendChild(empty);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `2026-${String(monthIdx+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      const cell = document.createElement('div');
+      cell.className = 'month-cell' + (dateStr === todayStr ? ' today' : '');
+      
+      const dayLbl = document.createElement('div');
+      dayLbl.className = 'cell-day';
+      dayLbl.textContent = day;
+      cell.appendChild(dayLbl);
+
+      if (spiActive) {
+        const spiItems = getSpiForDate(dateStr);
+        if (spiItems.length) {
+          const badge = document.createElement('div');
+          badge.className = 'cell-spi';
+          badge.textContent = spiItems.map(s => s.symbol).join('');
+          badge.title = spiItems.map(s => s.name).join(', ');
+          cell.appendChild(badge);
+        }
+      }
+
+      // Count tasks for this day
+      const weekDate = new Date(dateStr);
+      const weekMon = new Date(weekDate);
+      weekMon.setDate(weekDate.getDate() - ((weekDate.getDay()+6)%7));
+      const weekDi = Math.floor((weekDate - weekMon) / 86400000);
+      // Find matching weekIdx
+      const matchingWeek = ALL_WEEKS.findIndex(w => w.dates[weekDi] === dateStr.slice(5).replace(/-0?/,'-').replace(/^0/,''));
+      
+      cell.onclick = () => {
+        monthViewActive = false;
+        document.getElementById('month-btn').classList.remove('active');
+        document.getElementById('hscroll').style.display = '';
+        document.getElementById('month-view').style.display = 'none';
+        // Navigate to the right week
+        const wd = new Date(dateStr);
+        const mon = new Date(wd);
+        mon.setDate(wd.getDate() - ((wd.getDay()+6)%7));
+        const monStr = mon.toISOString().split('T')[0];
+        const wi = ALL_WEEKS.findIndex(w => w.dates[0] === monStr.slice(5));
+        if (wi >= 0) { weekIdx = wi; render(); }
+      };
+      
+      grid.appendChild(cell);
+    }
+    container.appendChild(grid);
+  });
+}
+
+// ── CYLINDER EFFECT (fixed) ──
 function applyCylinderEffect() {
-  const cols = document.querySelectorAll('.day-col');
+  const cols = document.querySelectorAll('#cols-wrap .day-col');
   const total = cols.length;
-  const arcDeg = 22;
+  if (total === 0) return;
+  const arcDeg = 20;
   cols.forEach((col, i) => {
     const fraction = total > 1 ? (i / (total - 1)) : 0.5;
     const deg = (fraction - 0.5) * arcDeg;
-    const scale = 1 - Math.abs(fraction - 0.5) * 0.035;
-    col.style.transform = `perspective(900px) rotateY(${deg}deg) scale(${scale})`;
+    const scale = 1 - Math.abs(fraction - 0.5) * 0.03;
+    col.style.transform = `perspective(1000px) rotateY(${deg}deg) scale(${scale})`;
     col.style.transformOrigin = '50% 50%';
+    col.style.zIndex = Math.round(10 - Math.abs(fraction - 0.5) * 10);
   });
 }
+
 </script>
 
 <div id="sub-confirm-modal">
